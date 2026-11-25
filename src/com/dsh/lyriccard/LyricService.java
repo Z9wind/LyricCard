@@ -398,6 +398,15 @@ public class LyricService extends Service {
         // 词幕订阅桥：Provider 只把当前行写进标题时，桥能给出完整歌词和真实歌名。
         LyriconBridge bridge = LyriconBridge.get(this);
         Lyric bridgeLyric = bridge.getLyric();
+        // 播放器已经停止/退出（没有活动会话）时，不再使用桥里残留的旧歌词，
+        // 否则会一直停在上一次的最后一句，而不是显示默认文本。
+        if (active == null) {
+            bridgeLyric = null;
+            t = "";
+            a = "";
+            lyricInfo = null;
+            providerLine = null;
+        }
         if (bridgeLyric != null && !bridgeLyric.isEmpty()) {
             String bt = bridge.getTitle();
             if (bt != null && !bt.isEmpty()) {
