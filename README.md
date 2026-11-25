@@ -4,7 +4,9 @@ ColorOS 桌面歌词小组件（AppWidget），读取播放器 MediaSession 的 
 
 ## 演示
 
-▶ [观看演示视频](docs/demo.mp4)
+![演示](docs/demo.gif)
+
+也可以下载完整视频：[demo.mp4](docs/demo.mp4)
 
 ## 功能
 
