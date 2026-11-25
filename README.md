@@ -2,6 +2,10 @@
 
 ColorOS 桌面歌词小组件（AppWidget），读取播放器 MediaSession 的 `lyricInfo` 显示逐行歌词。
 
+## 演示
+
+▶ [观看演示视频](docs/demo.mp4)
+
 ## 功能
 
 - 桌面小组件显示当前播放音乐歌词（目前适配网易云音乐、Qplayer、Salt player）
