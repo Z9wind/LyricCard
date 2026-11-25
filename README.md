@@ -48,7 +48,6 @@ ColorOS 桌面歌词小组件（AppWidget），读取播放器 MediaSession 的 
 
 ## 说明
 
-- AppWidget 受 RemoteViews 限制：字体文件、运行时斜体等无法动态设置，本项目的斜体通过预生成布局实现。
 - 请遵守上述参考项目各自的许可证。
 
 ## License
