@@ -653,8 +653,7 @@ public class LyricService extends Service {
         rv.setInt(R.id.title, "setGravity", gravity);
         rv.setInt(R.id.artist, "setGravity", gravity);
         rv.setInt(R.id.content, "setGravity", gravity);
-        rv.setInt(R.id.line_prev, "setGravity", gravity);
-        rv.setInt(R.id.line_next, "setGravity", gravity);
+        for (int rid : rowIds) rv.setInt(rid, "setGravity", gravity);
         rv.setInt(R.id.line_trans, "setGravity", gravity);
         rv.setInt(R.id.text_a, "setGravity", gravity);
         rv.setInt(R.id.text_b, "setGravity", gravity);
