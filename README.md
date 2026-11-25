@@ -14,6 +14,16 @@ ColorOS 桌面歌词小组件（AppWidget），读取播放器 MediaSession 的 
 
 注：样式参考 ColorOS-Live-Lyrics-Bridge（Apache-2.0），详见 NOTICE。
 
+## 歌词来源与 Provider（重要）
+
+本应用只读取播放器 MediaSession 里的 `lyricInfo` 字段，**它不自己写歌词**。多数国内播放器不会原生写入这个字段，需要一个「歌词 Provider / 插件」把歌词桥接进去：
+
+- **推荐**：[LyricProvider](https://github.com/tomakino/LyricProvider) — 按你的播放器（网易云、QQ 音乐、Salt Player 等）下载对应插件并启用。
+- 或者使用 [ColorOS-Live-Lyrics-Bridge](https://github.com/Andrea-lyz/ColorOS-Live-Lyrics-Bridge) 的 Provider（LSPosed 模块，需要 Root）。
+- **未 Root 的用户**：打开应用里的「未root无provider兼容模式」，会通过在线歌词源（网易云 / QQ 音乐 / lrclib）匹配歌词，可能有轻微延迟。
+
+> 没有 Provider 又没开兼容模式时，卡片会显示「暂无播放」。
+
 ## 构建
 
 ```bash

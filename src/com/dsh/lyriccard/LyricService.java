@@ -34,7 +34,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class LyricService extends Service {
-    private static final String CHANNEL = "lyricglass";
+    private static final String CHANNEL = "lyriccard_fg";
     private static final int NOTIFY_ID = 0x4c47;
     private static final long TICK_MS = 100;
     private static final long WIDGET_MS = 200;
@@ -78,6 +78,8 @@ public class LyricService extends Service {
     };
 
     private static volatile int sizeW = 0, sizeH = 0;
+    private volatile boolean isForeground = false;
+    private String lastCur = "";
     private final Handler main = new Handler(Looper.getMainLooper());
     private final Map<MediaSession.Token, MediaController> controllers = new HashMap<>();
     private final ExecutorService io = Executors.newSingleThreadExecutor();
@@ -135,6 +137,7 @@ public class LyricService extends Service {
             if (Build.VERSION.SDK_INT >= 33) registerReceiver(visibilityReceiver, f, Context.RECEIVER_EXPORTED);
             else registerReceiver(visibilityReceiver, f);
         } catch (Throwable ignored) {}
+        createChannel();
         registerSizeReceiver();
         running = true;
         main.post(tick);
@@ -181,20 +184,14 @@ public class LyricService extends Service {
     private Notification buildNotification(String t, String s) {
         int pi = PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0);
         PendingIntent open = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), pi);
-        PendingIntent toggle = PendingIntent.getService(this, 1,
-                new Intent(this, LyricService.class).setAction("com.dsh.lyriccard.TOGGLE"), pi);
-        RemoteViews rv = new RemoteViews(getPackageName(), R.layout.notif_lyric);
-        rv.setTextViewText(R.id.n_title, t);
-        rv.setTextViewText(R.id.n_sub, s);
-        rv.setTextViewText(R.id.n_toggle, enabled() ? "\u23f8" : "\u25b6");
-        rv.setOnClickPendingIntent(R.id.n_toggle, toggle);
         Notification.Builder b;
         if (Build.VERSION.SDK_INT >= 26) b = new Notification.Builder(this, CHANNEL);
         else b = new Notification.Builder(this);
         b.setSmallIcon(R.drawable.ic_stat_lyric)
-                .setCustomContentView(rv)
-                .setStyle(new Notification.DecoratedCustomViewStyle())
+                .setContentTitle(t)
+                .setContentText(s)
                 .setOngoing(true)
+                .setOnlyAlertOnce(true)
                 .setContentIntent(open);
         return b.build();
     }
@@ -260,6 +257,15 @@ public class LyricService extends Service {
         }
     };
 
+    private void dbg(String msg) {
+        try {
+            java.io.File f = new java.io.File(getExternalFilesDir(null), "dbg.log");
+            java.io.FileWriter w = new java.io.FileWriter(f, true);
+            w.write(new java.text.SimpleDateFormat("HH:mm:ss").format(new java.util.Date()) + " " + msg + "\n");
+            w.close();
+        } catch (Throwable ignored) {}
+    }
+
     private void registerSizeReceiver() {
         try {
             android.content.BroadcastReceiver r = new android.content.BroadcastReceiver() {
@@ -316,6 +322,9 @@ public class LyricService extends Service {
         return systemAccentColor;
     }
 
+    private long lastDbgAt = 0;
+    private long lastFetchTry = 0;
+
     private void refresh() {
         if (!enabled()) return;
         ensureMediaListener();
@@ -361,6 +370,7 @@ public class LyricService extends Service {
                 int color = Lyric.dominantColor(art);
                 if (color != 0) {
                     glowColor = color;
+                    getSharedPreferences("settings", MODE_PRIVATE).edit().putInt("cover_color", color).apply();
                     try {
                         Intent ci = new Intent("com.dsh.lyriccard.COLOR");
                         ci.setPackage("com.android.launcher");
@@ -371,14 +381,21 @@ public class LyricService extends Service {
             }
         }
 
+        long dbgNow = SystemClock.elapsedRealtime();
+        if (dbgNow - lastDbgAt > 5000) {
+            lastDbgAt = dbgNow;
+            dbg("state t=" + t + " a=" + a + " infoLen=" + (lyricInfo == null ? -1 : lyricInfo.length()));
+        }
         String key = t + "\u0001" + a + "\u0001" + (lyricInfo == null ? "" : lyricInfo.hashCode());
         if (!key.equals(lyricKey)) {
+            dbg("keychange t=" + t + " a=" + a + " infoLen=" + (lyricInfo == null ? -1 : lyricInfo.length()) + " online=" + onlineEnabled());
             lyricKey = key;
             lastIndex = -2;
             flipInit = false;
             showingA = true;
             lyric = null;
-            if (lyricInfo != null && !lyricInfo.isEmpty()) {
+            boolean compat = getSharedPreferences("settings", MODE_PRIVATE).getBoolean("compat", false);
+            if (!compat && lyricInfo != null && !lyricInfo.isEmpty()) {
                 try {
                     Lyric parsed = Lyric.parseLyricInfo(lyricInfo);
                     if (!parsed.isEmpty()) lyric = parsed;
@@ -394,8 +411,14 @@ public class LyricService extends Service {
                 }
             }
             if (lyric == null && !t.isEmpty() && onlineEnabled()) {
-                fetchOnline(t, a, 0, key);
+                fetchOnline(t, a, 0, key, lyricInfo, active == null ? null : active.getPackageName());
             }
+        }
+
+        if (lyric == null && !t.isEmpty() && onlineEnabled()
+                && SystemClock.elapsedRealtime() - lastFetchTry > 15000) {
+            lastFetchTry = SystemClock.elapsedRealtime();
+            fetchOnline(t, a, 0, key, lyricInfo, active == null ? null : active.getPackageName());
         }
 
         long displayPos;
@@ -407,30 +430,57 @@ public class LyricService extends Service {
             lastWidgetAt = now;
             pushWidget(displayPos);
         }
-        if (st == PlaybackState.STATE_PLAYING) notifyStatus(t, a.isEmpty() ? "正在播放" : a);
+        updateForeground(st, t, a.isEmpty() ? "正在播放" : a);
+    }
+
+    private void updateForeground(int st, String t, String a) {
+        try {
+            boolean fg = getSharedPreferences("settings", MODE_PRIVATE).getBoolean("foreground", true);
+            boolean want = st == PlaybackState.STATE_PLAYING && fg;
+            if (want && !isForeground) {
+                startForeground(NOTIFY_ID, buildNotification(t.isEmpty() ? "LyricCard" : t, a));
+                isForeground = true;
+            } else if (want && isForeground) {
+                NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                if (nm != null) nm.notify(NOTIFY_ID, buildNotification(t.isEmpty() ? "LyricCard" : t, a));
+            } else if (!want && isForeground) {
+                stopForeground(true);
+                isForeground = false;
+            }
+        } catch (Throwable ignored) {}
     }
 
     private static String nz(String s) { return s == null ? "" : s; }
 
     private boolean onlineEnabled() {
-        return getSharedPreferences("settings", MODE_PRIVATE).getBoolean("online", true);
+        android.content.SharedPreferences sp = getSharedPreferences("settings", MODE_PRIVATE);
+        return sp.getBoolean("online", false) || sp.getBoolean("compat", false);
     }
 
-    private void fetchOnline(final String t, final String a, final long dur, final String key) {
+    private void fetchOnline(final String t, final String a, final long dur, final String key, final String info, final String pkg) {
         if (fetching) return;
         fetching = true;
         io.execute(new Runnable() {
             @Override public void run() {
-                final Lyric l = LyricsFetcher.fetch(t, a, dur);
+                final Lyric l = LyricsFetcher.fetch(t, a, dur, pkg);
+                dbg("fetch t=" + t + " a=" + a + " l=" + (l == null ? "null" : String.valueOf(l.lines.size())));
                 main.post(new Runnable() {
                     @Override public void run() {
                         fetching = false;
-                        if (key.equals(lyricKey) && l != null && !l.isEmpty()) {
+                        if (!key.equals(lyricKey)) return;
+                        if (l != null && !l.isEmpty()) {
                             lyric = l;
-                            lastIndex = -2;
-                            flipInit = false;
-                            pushWidget(lastPos);
+                        } else if (info != null && !info.isEmpty()) {
+                            try {
+                                Lyric fallback = Lyric.parseLyricInfo(info);
+                                if (fallback != null && !fallback.isEmpty()) lyric = fallback;
+                            } catch (Throwable ignored) {}
+                        } else {
+                            return;
                         }
+                        lastIndex = -2;
+                        flipInit = false;
+                        pushWidget(lastPos);
                     }
                 });
             }
@@ -500,7 +550,10 @@ public class LyricService extends Service {
         }
         String emptyTitle = getSharedPreferences("settings", MODE_PRIVATE).getString("empty_title", "LyricCard");
         String emptyText = getSharedPreferences("settings", MODE_PRIVATE).getString("empty_text", "暂无播放");
-        if (cur.isEmpty()) cur = emptyText;
+        if (cur.isEmpty()) {
+            if (!title.isEmpty()) cur = "\u266a " + title;
+            else cur = emptyText;
+        }
 
         float[] hsv = new float[3];
         android.graphics.Color.colorToHSV(glowColor | 0xFF000000, hsv);

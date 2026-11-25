@@ -108,7 +108,7 @@ public class MainActivity extends Activity {
         addButton(quick, "添加桌面卡片", new View.OnClickListener() {
             @Override public void onClick(View v) { requestPin(); }
         });
-        addButton(quick, "授予使用情况访问（省电判断）", new View.OnClickListener() {
+        addButton(quick, "授予使用情况访问（未root用户省电判断）", new View.OnClickListener() {
             @Override public void onClick(View v) {
                 try {
                     startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
@@ -126,56 +126,72 @@ public class MainActivity extends Activity {
 
         groupTitle(root, "歌词颜色");
         LinearLayout colors = card(root);
-        final View swatch = new View(this);
-        GradientDrawable sw = new GradientDrawable();
-        sw.setColor(sp.getInt("monet_color", 0xFFFFD68A) | 0xFF000000);
-        sw.setCornerRadius(dp(12));
-        swatch.setBackground(sw);
-        colors.addView(swatch, new LinearLayout.LayoutParams(-1, dp(44)));
 
-        Switch monetSw = new Switch(this);
-        monetSw.setText("使用系统莫奈色（关闭则跟随封面）");
+        TextView monetLabel = new TextView(this);
+        monetLabel.setText("系统莫奈色");
+        monetLabel.setTextColor(ON_VARIANT);
+        monetLabel.setTextSize(12);
+        colors.addView(monetLabel);
+        View monetSwatch = new View(this);
+        GradientDrawable mg = new GradientDrawable();
+        mg.setColor(readSystemAccent() | 0xFF000000);
+        mg.setCornerRadius(dp(12));
+        monetSwatch.setBackground(mg);
+        colors.addView(monetSwatch, new LinearLayout.LayoutParams(-1, dp(36)));
+
+        TextView coverLabel = new TextView(this);
+        coverLabel.setText("当前封面取色");
+        coverLabel.setTextColor(ON_VARIANT);
+        coverLabel.setTextSize(12);
+        coverLabel.setPadding(0, dp(10), 0, 0);
+        colors.addView(coverLabel);
+        View coverSwatch = new View(this);
+        GradientDrawable cg = new GradientDrawable();
+        cg.setColor(sp.getInt("cover_color", 0xFFFFD68A) | 0xFF000000);
+        cg.setCornerRadius(dp(12));
+        coverSwatch.setBackground(cg);
+        colors.addView(coverSwatch, new LinearLayout.LayoutParams(-1, dp(36)));
+
+        final Switch monetSw = new Switch(this);
+        monetSw.setText("使用系统莫奈色（关闭则跟随封面取色）");
         monetSw.setTextColor(ON_SURFACE);
         monetSw.setTextSize(14);
         monetSw.setChecked(sp.getBoolean("monet", false));
         tintSwitch(monetSw);
+        LinearLayout.LayoutParams mslp = new LinearLayout.LayoutParams(-1, -2);
+        mslp.topMargin = dp(10);
+        colors.addView(monetSw, mslp);
+
+        final Switch coverSw = new Switch(this);
+        coverSw.setText("实时封面取色");
+        coverSw.setTextColor(ON_SURFACE);
+        coverSw.setTextSize(14);
+        coverSw.setChecked(!sp.getBoolean("monet", false));
+        tintSwitch(coverSw);
+        LinearLayout.LayoutParams cslp = new LinearLayout.LayoutParams(-1, -2);
+        cslp.topMargin = dp(6);
+        colors.addView(coverSw, cslp);
+
         monetSw.setOnCheckedChangeListener(new android.widget.CompoundButton.OnCheckedChangeListener() {
             @Override public void onCheckedChanged(android.widget.CompoundButton b, boolean v) {
                 sp.edit().putBoolean("monet", v).apply();
-                try {
-                    Intent ci = new Intent("com.dsh.lyriccard.COLOR");
-                    ci.setPackage("com.android.launcher");
-                    ci.putExtra("color", v ? sp.getInt("monet_color", 0xFFFFD68A) : 0);
-                    sendBroadcast(ci);
-                } catch (Throwable ignored) {}
+                if (v && coverSw.isChecked()) coverSw.setChecked(false);
             }
         });
-        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(-1, -2);
-        slp.topMargin = dp(10);
-        colors.addView(monetSw, slp);
-
-        addButton(colors, "读取系统莫奈色并应用", new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                int color = readSystemAccent();
-                sp.edit().putInt("monet_color", color).putBoolean("monet", true).apply();
-                GradientDrawable d = new GradientDrawable();
-                d.setColor(color | 0xFF000000);
-                d.setCornerRadius(dp(12));
-                swatch.setBackground(d);
-                try {
-                    Intent ci = new Intent("com.dsh.lyriccard.COLOR");
-                    ci.setPackage("com.android.launcher");
-                    ci.putExtra("color", color);
-                    sendBroadcast(ci);
-                } catch (Throwable ignored) {}
+        coverSw.setOnCheckedChangeListener(new android.widget.CompoundButton.OnCheckedChangeListener() {
+            @Override public void onCheckedChanged(android.widget.CompoundButton b, boolean v) {
+                if (v && monetSw.isChecked()) monetSw.setChecked(false);
+                if (!v && !monetSw.isChecked()) monetSw.setChecked(true);
             }
         });
 
         groupTitle(root, "外观");
         LinearLayout look = card(root);
         addSwitch(look, "当前行发光", "glow", true);
-        addSwitch(look, "深色背景（关闭为浅色）", "bg", true);
-        addSwitch(look, "无歌词时在线匹配", "online", true);
+        addSwitch(look, "背景底色切换", "bg", true);
+        addSwitch(look, "无歌词时在线匹配", "online", false);
+        addSwitch2(look, "未root无provider兼容模式", "（在线匹配歌词，可能存在轻微延迟）", "compat", false);
+        addSwitch2(look, "后台持续更新（前台服务）", "会在通知栏添加一条静默通知，防止系统冻结歌词服务", "foreground", true);
         addSwitch(look, "紧凑模式（4×1 等矮卡片）", "compact", false);
         addSwitch(look, "隐藏最近任务卡片", "hide_recents", true);
         addItalicMode(look);
@@ -231,7 +247,7 @@ public class MainActivity extends Activity {
         });
 
         LinearLayout restartCard = card(root);
-        addButton(restartCard, "重启桌面", new View.OnClickListener() {
+        addButton(restartCard, "重启桌面（需 root）", new View.OnClickListener() {
             @Override public void onClick(View v) { restartLauncher(); }
         });
 
@@ -320,6 +336,38 @@ public class MainActivity extends Activity {
         sw.setThumbTintList(ColorStateList.valueOf(accent));
         sw.setTrackTintList(ColorStateList.valueOf(
                 (0x55 << 24) | (accent & 0xFFFFFF)));
+    }
+
+    private void addSwitch2(LinearLayout root, String main, String sub, final String key, boolean def) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        LinearLayout col = new LinearLayout(this);
+        col.setOrientation(LinearLayout.VERTICAL);
+        TextView t1 = new TextView(this);
+        t1.setText(main);
+        t1.setTextColor(ON_SURFACE);
+        t1.setTextSize(14);
+        TextView t2 = new TextView(this);
+        t2.setText(sub);
+        t2.setTextColor(ON_VARIANT);
+        t2.setTextSize(11);
+        t2.setPadding(0, dp(2), 0, 0);
+        col.addView(t1);
+        col.addView(t2);
+        row.addView(col, new LinearLayout.LayoutParams(0, -2, 1f));
+        final Switch sw = new Switch(this);
+        sw.setChecked(sp.getBoolean(key, def));
+        tintSwitch(sw);
+        sw.setOnCheckedChangeListener(new android.widget.CompoundButton.OnCheckedChangeListener() {
+            @Override public void onCheckedChanged(android.widget.CompoundButton b, boolean v) {
+                sp.edit().putBoolean(key, v).apply();
+            }
+        });
+        row.addView(sw);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
+        lp.topMargin = dp(10);
+        root.addView(row, lp);
     }
 
     private void addEdit(LinearLayout root, String label, final String key, String def) {
@@ -487,7 +535,8 @@ public class MainActivity extends Activity {
     private void restartLauncher() {
         try {
             Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", "am force-stop com.android.launcher"});
-            p.waitFor();
+            int code = p.waitFor();
+            if (code != 0) throw new RuntimeException("su denied: " + code);
             Intent home = new Intent(Intent.ACTION_MAIN);
             home.addCategory(Intent.CATEGORY_HOME);
             home.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
