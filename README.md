@@ -2,7 +2,7 @@
 
 ColorOS 桌面歌词小组件（AppWidget），读取播放器 MediaSession 的 `lyricInfo` 显示逐行歌词。
 
-> **🤖 本项目由 AI 辅助制作**
+> ** 本项目由 AI 辅助制作**
 
 ## 演示
 
