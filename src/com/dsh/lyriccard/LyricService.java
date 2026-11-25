@@ -258,19 +258,23 @@ public class LyricService extends Service {
         @Override public void run() {
             if (!running) return;
 
+            // 离开桌面就暂停读取和刷新，回桌面由可见性广播立即恢复，省电。
+            if (!launcherVisible) {
+                main.postDelayed(this, 500);
+                return;
+            }
+
+            long now = SystemClock.elapsedRealtime();
+            long gap = lastTickAt == 0 ? 0 : now - lastTickAt;
+            lastTickAt = now;
+            if (gap > 1500) dbg("tickGap " + gap);
             try { refresh(); } catch (Exception ignored) {}
             main.postDelayed(this, TICK_MS);
         }
     };
 
-    private void dbg(String msg) {
-        try {
-            java.io.File f = new java.io.File(getExternalFilesDir(null), "dbg.log");
-            java.io.FileWriter w = new java.io.FileWriter(f, true);
-            w.write(new java.text.SimpleDateFormat("HH:mm:ss").format(new java.util.Date()) + " " + msg + "\n");
-            w.close();
-        } catch (Throwable ignored) {}
-    }
+    /** 日志已关闭，避免占用存储和内存。 */
+    private void dbg(String msg) {}
 
     private void registerSizeReceiver() {
         try {
@@ -328,6 +332,7 @@ public class LyricService extends Service {
         return systemAccentColor;
     }
 
+    private long lastTickAt = 0;
     private long lastDbgAt = 0;
     private long lastFetchTry = 0;
 
@@ -343,9 +348,14 @@ public class LyricService extends Service {
         providerLine = null;
         android.graphics.Bitmap art = null;
 
+        long tMeta0 = SystemClock.elapsedRealtime();
         if (active != null) {
             MediaMetadata md = active.getMetadata();
+            long tMeta1 = SystemClock.elapsedRealtime();
             PlaybackState ps = active.getPlaybackState();
+            long tMeta2 = SystemClock.elapsedRealtime();
+            long mdMs = tMeta1 - tMeta0, psMs = tMeta2 - tMeta1;
+            if (mdMs > 50 || psMs > 50) dbg("binder md=" + mdMs + " ps=" + psMs);
             if (md != null) {
                 String rawTitle = nz(md.getString(MediaMetadata.METADATA_KEY_TITLE));
                 String rawArtist = nz(md.getString(MediaMetadata.METADATA_KEY_ARTIST));

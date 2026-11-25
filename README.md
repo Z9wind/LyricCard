@@ -56,6 +56,14 @@ ColorOS 桌面歌词小组件（AppWidget），读取播放器 MediaSession 的 
 
 - 请遵守上述参考项目各自的许可证。
 
+## 省电与后台（2.75+）
+
+- 离开桌面（切到其他应用或熄屏）时暂停读取播放器和更新小组件，回到桌面立即恢复刷新；
+- 前台服务声明 `mediaPlayback` 类型并新增对应权限，适配 Android 14+ 的前台服务要求；
+- 不再写 `dbg.log` 日志文件，减少存储和内存占用；
+- Xposed 模块去掉了静态作用域，安装后在 LSPosed 里手动勾选「桌面」即可；
+- 小组件实例失效（例如重装应用后）会导致更新被系统静默丢弃、歌词停住，删除桌面卡片重新添加即可恢复。
+
 ## License
 
 Apache License 2.0，见 [LICENSE](LICENSE)。Copyright 2026 LyricCard contributors。
