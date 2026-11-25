@@ -91,6 +91,10 @@ public class LyricService extends Service {
     private String artist = "";
     private Lyric lyric;
     private String lyricKey = "";
+    /** 某些 Provider 不写 lyricInfo，而是把当前歌词行写进标题，这里缓存该行。 */
+    private String providerLine = null;
+    /** 当前 lyric 是否只是 providerLine 的单行占位（在线歌词到位后会替换）。 */
+    private boolean lyricIsProviderLine = false;
     private boolean fetching = false;
 
     private long lastPos = 0;
@@ -139,6 +143,7 @@ public class LyricService extends Service {
         } catch (Throwable ignored) {}
         createChannel();
         registerSizeReceiver();
+        try { LyriconBridge.get(this).register(); } catch (Throwable ignored) {}
         running = true;
         main.post(tick);
     }
@@ -160,6 +165,7 @@ public class LyricService extends Service {
     @Override
     public void onDestroy() {
         running = false;
+        try { LyriconBridge.get(this).unregister(); } catch (Throwable ignored) {}
         try { unregisterReceiver(visibilityReceiver); } catch (Throwable ignored) {}
         main.removeCallbacksAndMessages(null);
         io.shutdownNow();
@@ -334,16 +340,39 @@ public class LyricService extends Service {
         long pos = 0;
         int st = PlaybackState.STATE_NONE;
         String lyricInfo = null;
+        providerLine = null;
         android.graphics.Bitmap art = null;
 
         if (active != null) {
             MediaMetadata md = active.getMetadata();
             PlaybackState ps = active.getPlaybackState();
             if (md != null) {
-                t = nz(md.getString(MediaMetadata.METADATA_KEY_TITLE));
-                a = nz(md.getString(MediaMetadata.METADATA_KEY_ARTIST));
-                if (a.isEmpty()) a = nz(md.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST));
+                String rawTitle = nz(md.getString(MediaMetadata.METADATA_KEY_TITLE));
+                String rawArtist = nz(md.getString(MediaMetadata.METADATA_KEY_ARTIST));
+                if (rawArtist.isEmpty()) rawArtist = nz(md.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST));
+                String dispTitle = nz(md.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE));
                 lyricInfo = md.getString("lyricInfo");
+                // 有的 Provider 不写 lyricInfo，而是把当前歌词行塞进标题，
+                // 同时把歌手字段改成「歌曲名 - 歌手」，这里还原真实信息。
+                t = rawTitle;
+                a = rawArtist;
+                if (lyricInfo == null || lyricInfo.isEmpty()) {
+                    if (!dispTitle.isEmpty() && !dispTitle.equals(rawTitle)) {
+                        t = dispTitle;
+                        providerLine = rawTitle;
+                    } else {
+                        int sep = rawArtist.lastIndexOf(" - ");
+                        if (sep > 0) {
+                            String songName = rawArtist.substring(0, sep).trim();
+                            String singer = rawArtist.substring(sep + 3).trim();
+                            if (!songName.isEmpty() && !singer.isEmpty() && !songName.equals(rawTitle)) {
+                                t = songName;
+                                a = singer;
+                                providerLine = rawTitle;
+                            }
+                        }
+                    }
+                }
                 art = md.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART);
                 if (art == null) art = md.getBitmap(MediaMetadata.METADATA_KEY_ART);
             }
@@ -354,6 +383,16 @@ public class LyricService extends Service {
                 if (st == PlaybackState.STATE_PLAYING) {
                     pos += (long) ((SystemClock.elapsedRealtime() - ps.getLastPositionUpdateTime()) * speed);
                 }
+            }
+        }
+        // 词幕订阅桥：Provider 只把当前行写进标题时，桥能给出完整歌词和真实歌名。
+        LyriconBridge bridge = LyriconBridge.get(this);
+        Lyric bridgeLyric = bridge.getLyric();
+        if (bridgeLyric != null && !bridgeLyric.isEmpty()) {
+            String bt = bridge.getTitle();
+            if (bt != null && !bt.isEmpty()) {
+                t = bt;
+                a = bridge.getArtist();
             }
         }
         title = t;
@@ -384,16 +423,23 @@ public class LyricService extends Service {
         long dbgNow = SystemClock.elapsedRealtime();
         if (dbgNow - lastDbgAt > 5000) {
             lastDbgAt = dbgNow;
-            dbg("state t=" + t + " a=" + a + " infoLen=" + (lyricInfo == null ? -1 : lyricInfo.length()));
+            dbg("state t=" + t + " a=" + a + " infoLen=" + (lyricInfo == null ? -1 : lyricInfo.length())
+                    + " bridge=" + (bridgeLyric == null ? 0 : bridgeLyric.lines.size()) + "/" + (bridge.isConnected() ? 1 : 0));
         }
         String key = t + "\u0001" + a + "\u0001" + (lyricInfo == null ? "" : lyricInfo.hashCode());
-        if (!key.equals(lyricKey)) {
+        if (bridgeLyric != null && !bridgeLyric.isEmpty()) {
+            // 桥的歌词优先：直接覆盖，避免在线匹配把 Provider 的歌词换掉。
+            lyric = bridgeLyric;
+            lyricIsProviderLine = false;
+            lyricKey = key;
+        } else if (!key.equals(lyricKey)) {
             dbg("keychange t=" + t + " a=" + a + " infoLen=" + (lyricInfo == null ? -1 : lyricInfo.length()) + " online=" + onlineEnabled());
             lyricKey = key;
             lastIndex = -2;
             flipInit = false;
             showingA = true;
             lyric = null;
+            lyricIsProviderLine = false;
             boolean compat = getSharedPreferences("settings", MODE_PRIVATE).getBoolean("compat", false);
             if (!compat && lyricInfo != null && !lyricInfo.isEmpty()) {
                 try {
@@ -410,12 +456,23 @@ public class LyricService extends Service {
                     } catch (Throwable ignored) {}
                 }
             }
-            if (lyric == null && !t.isEmpty() && onlineEnabled()) {
+            // Provider 只给当前行时先单行占位，在线歌词到位后会被替换。
+            if (lyric == null && providerLine != null) {
+                lyric = providerSingleLine(providerLine);
+                lyricIsProviderLine = true;
+            }
+            if ((lyric == null || lyricIsProviderLine) && !t.isEmpty() && onlineEnabled()) {
                 fetchOnline(t, a, 0, key, lyricInfo, active == null ? null : active.getPackageName());
+            }
+        } else if (providerLine != null && (lyric == null || lyricIsProviderLine)) {
+            // 同一首歌内逐句更新单行占位，不重置已有歌词。
+            if (lyric == null || lyric.lines.isEmpty() || !providerLine.equals(lyric.lines.get(0).text)) {
+                lyric = providerSingleLine(providerLine);
+                lyricIsProviderLine = true;
             }
         }
 
-        if (lyric == null && !t.isEmpty() && onlineEnabled()
+        if ((lyric == null || lyricIsProviderLine) && !t.isEmpty() && onlineEnabled()
                 && SystemClock.elapsedRealtime() - lastFetchTry > 15000) {
             lastFetchTry = SystemClock.elapsedRealtime();
             fetchOnline(t, a, 0, key, lyricInfo, active == null ? null : active.getPackageName());
@@ -452,6 +509,14 @@ public class LyricService extends Service {
 
     private static String nz(String s) { return s == null ? "" : s; }
 
+    /** 把 Provider 挤进标题的单行歌词包装成 Lyric，供现有显示逻辑复用。 */
+    private static Lyric providerSingleLine(String text) {
+        Lyric l = new Lyric();
+        l.lines.add(new Lyric.Line(0, text));
+        l.synced = false;
+        return l;
+    }
+
     private boolean onlineEnabled() {
         android.content.SharedPreferences sp = getSharedPreferences("settings", MODE_PRIVATE);
         return sp.getBoolean("online", false) || sp.getBoolean("compat", false);
@@ -470,6 +535,7 @@ public class LyricService extends Service {
                         if (!key.equals(lyricKey)) return;
                         if (l != null && !l.isEmpty()) {
                             lyric = l;
+                            lyricIsProviderLine = false;
                         } else if (info != null && !info.isEmpty()) {
                             try {
                                 Lyric fallback = Lyric.parseLyricInfo(info);

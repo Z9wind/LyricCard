@@ -40,6 +40,7 @@ final class LyricEngine {
     private PlaybackState cachedPs;
     private Lyric lyric;
     private String lyricKey = "";
+    private boolean lyricIsProviderLine = false;
     private long lastPos;
     private int lastIdx = -2;
     private boolean running;
@@ -171,20 +172,53 @@ final class LyricEngine {
             hasArt = art != null;
         }
 
-        String title = md == null ? "" : nz(md.getString(MediaMetadata.METADATA_KEY_TITLE));
-        String artist = md == null ? "" : nz(md.getString(MediaMetadata.METADATA_KEY_ARTIST));
+        String rawTitle = md == null ? "" : nz(md.getString(MediaMetadata.METADATA_KEY_TITLE));
+        String rawArtist = md == null ? "" : nz(md.getString(MediaMetadata.METADATA_KEY_ARTIST));
+        String dispTitle = md == null ? "" : nz(md.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE));
         String info = md == null ? null : md.getString("lyricInfo");
+
+        // 有的 Provider 把当前歌词行塞进标题，歌手字段改成「歌曲名 - 歌手」。
+        String title = rawTitle;
+        String artist = rawArtist;
+        String providerLine = null;
+        if (info == null || info.isEmpty()) {
+            if (!dispTitle.isEmpty() && !dispTitle.equals(rawTitle)) {
+                title = dispTitle;
+                providerLine = rawTitle;
+            } else {
+                int sep = rawArtist.lastIndexOf(" - ");
+                if (sep > 0) {
+                    String songName = rawArtist.substring(0, sep).trim();
+                    String singer = rawArtist.substring(sep + 3).trim();
+                    if (!songName.isEmpty() && !singer.isEmpty() && !songName.equals(rawTitle)) {
+                        title = songName;
+                        artist = singer;
+                        providerLine = rawTitle;
+                    }
+                }
+            }
+        }
 
         String key = title + "\u0001" + artist + "\u0001" + (info == null ? "" : info.hashCode());
         if (!key.equals(lyricKey)) {
             lyricKey = key;
             lyric = null;
+            lyricIsProviderLine = false;
             lastIdx = -2;
             if (info != null && !info.isEmpty()) {
                 try {
                     Lyric parsed = Lyric.parseLyricInfo(info);
                     if (!parsed.isEmpty()) lyric = parsed;
                 } catch (Throwable ignored) {}
+            }
+            if (lyric == null && providerLine != null) {
+                lyric = providerSingleLine(providerLine);
+                lyricIsProviderLine = true;
+            }
+        } else if (providerLine != null && (lyric == null || lyricIsProviderLine)) {
+            if (lyric == null || lyric.lines.isEmpty() || !providerLine.equals(lyric.lines.get(0).text)) {
+                lyric = providerSingleLine(providerLine);
+                lyricIsProviderLine = true;
             }
         }
 
@@ -248,4 +282,11 @@ final class LyricEngine {
     }
 
     private static String nz(String s) { return s == null ? "" : s; }
+
+    private static Lyric providerSingleLine(String text) {
+        Lyric l = new Lyric();
+        l.lines.add(new Lyric.Line(0, text));
+        l.synced = false;
+        return l;
+    }
 }
