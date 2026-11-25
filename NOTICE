@@ -1,0 +1,23 @@
+LyricCard
+Copyright 2026 LyricCard contributors
+
+本项目在设计与思路上参考了以下开源项目，特此致谢：
+
+1. ColorOS-Live-Lyrics-Bridge
+   Copyright Andrea-lyz
+   Apache License 2.0
+   https://github.com/Andrea-lyz/ColorOS-Live-Lyrics-Bridge
+   参考内容：桌面歌词卡片的视觉样式、从 MediaMetadata 的 lyricInfo 读取歌词与双行对照的思路。
+
+2. lyricon
+   Apache License 2.0
+   https://github.com/Kifranei/lyricon
+   参考内容：状态栏歌词与合成倾斜（textSkewX）实现斜体的思路。
+
+3. GKD
+   GNU General Public License v3.0
+   https://github.com/gkd-kit/gkd
+   参考内容：快捷设置磁贴保活、最近任务隐藏的实现思路。
+
+说明：以上项目仅作思路与样式参考，本项目为独立实现，未复制其源代码。
+GKD 采用 GPL-3.0，如需将其代码并入本项目，请遵守 GPL-3.0 的相应条款。
