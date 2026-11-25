@@ -260,8 +260,15 @@ public class LyricService extends Service {
 
             // 离开桌面就暂停读取和刷新，回桌面由可见性广播立即恢复，省电。
             if (!launcherVisible) {
-                main.postDelayed(this, 500);
-                return;
+                long nowV = SystemClock.elapsedRealtime();
+                if (nowV - lastVisibleCheck > 5000) {
+                    lastVisibleCheck = nowV;
+                    if (isLauncherForeground()) launcherVisible = true;
+                }
+                if (!launcherVisible) {
+                    main.postDelayed(this, 500);
+                    return;
+                }
             }
 
             long now = SystemClock.elapsedRealtime();
