@@ -383,6 +383,15 @@ public class LyricService extends Service {
                     Lyric parsed = Lyric.parseLyricInfo(lyricInfo);
                     if (!parsed.isEmpty()) lyric = parsed;
                 } catch (Exception ignored) {}
+                if (lyric == null) {
+                    try {
+                        String raw = lyricInfo.trim();
+                        if (raw.startsWith("[")) {
+                            Lyric parsed = Lyric.parseLrc(raw, true);
+                            if (!parsed.isEmpty()) lyric = parsed;
+                        }
+                    } catch (Throwable ignored) {}
+                }
             }
             if (lyric == null && !t.isEmpty() && onlineEnabled()) {
                 fetchOnline(t, a, 0, key);
@@ -491,7 +500,7 @@ public class LyricService extends Service {
         }
         String emptyTitle = getSharedPreferences("settings", MODE_PRIVATE).getString("empty_title", "LyricCard");
         String emptyText = getSharedPreferences("settings", MODE_PRIVATE).getString("empty_text", "暂无播放");
-        if (cur.isEmpty()) cur = title.isEmpty() ? emptyText : "\u266a " + title;
+        if (cur.isEmpty()) cur = emptyText;
 
         float[] hsv = new float[3];
         android.graphics.Color.colorToHSV(glowColor | 0xFF000000, hsv);
