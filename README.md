@@ -8,6 +8,8 @@ ColorOS 桌面歌词小组件（AppWidget），读取播放器 MediaSession 的 
 
 ![演示](docs/demo.gif)
 
+![桌面效果](docs/screenshot.jpg)
+
 > 预览桌面壁纸来源于抖音 @芋泥啵啵香奶茶
 
 ## 功能
