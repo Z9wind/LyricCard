@@ -38,7 +38,7 @@ ColorOS 桌面歌词小组件（AppWidget），读取播放器 MediaSession 的 
 
 - 桌面歌词卡片的视觉样式、`lyricInfo` 解析思路参考
   [ColorOS-Live-Lyrics-Bridge](https://github.com/Andrea-lyz/ColorOS-Live-Lyrics-Bridge)。
-  本项目只借鉴其「从 MediaMetadata 的 lyricInfo 读取歌词 / 双行对照」的思路与卡片样式，代码为独立实现。
+  本项目借鉴其「从 MediaMetadata 的 lyricInfo 读取歌词 / 双行对照」的思路与卡片样式，代码为独立实现。
 - 状态栏歌词、斜体（合成倾斜）做法参考
   [lyricon](https://github.com/Kifranei/lyricon)。
 - 磁贴保活与最近任务隐藏的写法参考
