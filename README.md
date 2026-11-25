@@ -10,7 +10,7 @@ ColorOS 桌面歌词小组件（AppWidget），读取播放器 MediaSession 的 
 
 ![桌面效果](docs/screenshot.jpg)
 
-> 预览桌面壁纸来源于抖音 @芋泥啵啵香奶茶
+> 预览桌面壁纸来源于抖音 @芋泥啵啵香奶茶https://v.douyin.com/wSb4yklGk0w/
 
 ## 功能
 
@@ -25,8 +25,6 @@ ColorOS 桌面歌词小组件（AppWidget），读取播放器 MediaSession 的 
 - **推荐**：[LyricProvider](https://github.com/tomakino/LyricProvider) — 按你的播放器（网易云、QQ 音乐、Salt Player 等）下载对应插件并启用。
 - 或者使用 [ColorOS-Live-Lyrics-Bridge](https://github.com/Andrea-lyz/ColorOS-Live-Lyrics-Bridge) 的 Provider（LSPosed 模块，需要 Root）。
 - **未 Root 的用户**：打开应用里的「未root无provider兼容模式」，会通过在线歌词源（网易云 / QQ 音乐 / lrclib）匹配歌词，可能有轻微延迟。
-
-> 没有 Provider 又没开兼容模式时，卡片会显示「暂无播放」。
 
 ## 构建
 
