@@ -19,5 +19,10 @@ Copyright 2026 LyricCard contributors
    https://github.com/gkd-kit/gkd
    参考内容：快捷设置磁贴保活、最近任务隐藏的实现思路。
 
+4. LyricProvider（外部依赖，不在本仓库内）
+   https://github.com/tomakino/LyricProvider
+   用途：为各播放器提供歌词插件，把歌词写入 MediaSession。
+
 说明：以上项目仅作思路与样式参考，本项目为独立实现，未复制其源代码。
+LyricProvider 是可选的运行依赖（插件），不包含在本仓库中。
 GKD 采用 GPL-3.0，如需将其代码并入本项目，请遵守 GPL-3.0 的相应条款。
