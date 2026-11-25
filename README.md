@@ -26,6 +26,14 @@ ColorOS 桌面歌词小组件（AppWidget），读取播放器 MediaSession 的 
 - 或者使用 [ColorOS-Live-Lyrics-Bridge](https://github.com/Andrea-lyz/ColorOS-Live-Lyrics-Bridge) 的 Provider（LSPosed 模块，需要 Root）。
 - **未 Root 的用户**：打开应用里的「未root无provider兼容模式」，会通过在线歌词源（网易云 / QQ 音乐 / lrclib）匹配歌词，可能有轻微延迟。
 
+## 更多歌词来源（2.51+）
+
+除了播放器写入的 `lyricInfo`，新版还会按以下顺序寻找歌词：
+
+1. **词幕（Lyricon）订阅桥**：设备上装有词幕系 Provider 时，应用会按 Lyricon 的公共订阅协议向 SystemUI 里的中心服务订阅，直接拿到 Provider 的完整时间轴歌词，不需要联网。原版词幕与后续 fork 只要在 SystemUI 注册了中心服务都能接上，不绑定具体分支；多个词幕同时存在时保留先建立的稳定连接。
+2. **标题里的当前行**：部分 Provider 不写 `lyricInfo`，而是把当前歌词行写进媒体标题，并把歌手字段改成「歌曲名 - 歌手」。应用会自动还原歌名/歌手，并把这一行作为单行歌词显示。
+3. **在线匹配**：以上来源都没有时，仍按「未root无provider兼容模式」用歌名/歌手匹配在线歌词。
+
 ## 构建
 
 ```bash
