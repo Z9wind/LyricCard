@@ -82,7 +82,7 @@ public class LyricService extends Service {
     private String lastCur = "";
     private final Handler main = new Handler(Looper.getMainLooper());
     private final Map<MediaSession.Token, MediaController> controllers = new HashMap<>();
-    private final ExecutorService io = Executors.newSingleThreadExecutor();
+    private final ExecutorService io = Executors.newCachedThreadPool();
     private MediaSessionManager msm;
     private MediaSessionManager.OnActiveSessionsChangedListener sessionsListener;
     private MediaController active;
@@ -143,6 +143,7 @@ public class LyricService extends Service {
         } catch (Throwable ignored) {}
         createChannel();
         registerSizeReceiver();
+        startLauncherWatcher();
         try { LyriconBridge.get(this).register(); } catch (Throwable ignored) {}
         running = true;
         main.post(tick);
@@ -259,18 +260,13 @@ public class LyricService extends Service {
             if (!running) return;
 
             // 离开桌面就暂停读取和刷新，回桌面由可见性广播立即恢复，省电。
-            if (!launcherVisible) {
-                long nowV = SystemClock.elapsedRealtime();
-                if (nowV - lastVisibleCheck > 5000) {
-                    lastVisibleCheck = nowV;
-                    if (isLauncherForeground()) launcherVisible = true;
-                }
-                if (!launcherVisible) {
-                    main.postDelayed(this, 500);
-                    return;
-                }
-            }
 
+            android.content.SharedPreferences ps = getSharedPreferences("settings", MODE_PRIVATE);
+            if ((ps.getBoolean("pause_root", false) || ps.getBoolean("pause_usage", false))
+                    && !launcherFg) {
+                main.postDelayed(this, 500);
+                return;
+            }
             long now = SystemClock.elapsedRealtime();
             long gap = lastTickAt == 0 ? 0 : now - lastTickAt;
             lastTickAt = now;
@@ -298,24 +294,79 @@ public class LyricService extends Service {
         } catch (Throwable ignored) {}
     }
 
+    /** 省电开关开启时，后台线程判断桌面是否在前台：有 root 用 root，否则用使用记录。 */
+    private void startLauncherWatcher() {
+        Thread t = new Thread(new Runnable() {
+            @Override public void run() {
+                while (running) {
+                    try {
+                        android.content.SharedPreferences ps = getSharedPreferences("settings", MODE_PRIVATE);
+                        boolean useRoot = ps.getBoolean("pause_root", false) && rootState != 0;
+                        boolean useUsage = ps.getBoolean("pause_usage", false);
+                        if (useRoot) {
+                            long nowMs = SystemClock.elapsedRealtime();
+                            if (rootState == -1 || (rootState == 0 && nowMs - lastRootCheck > 30000)) {
+                                lastRootCheck = nowMs;
+                                rootState = checkRoot();
+                            }
+                        }
+                        if (useRoot && rootState == 1) launcherFg = isLauncherTopByRoot();
+                        else if (useUsage) launcherFg = isLauncherForeground();
+                        else launcherFg = true;
+                    } catch (Throwable ignored) {}
+                    try { Thread.sleep(3000); } catch (InterruptedException e) { return; }
+                }
+            }
+        }, "launcher-watch");
+        t.setDaemon(true);
+        t.start();
+    }
+
+    private int checkRoot() {
+        try {
+            Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", "id"});
+            java.io.BufferedReader r = new java.io.BufferedReader(new java.io.InputStreamReader(p.getInputStream()));
+            String line = r.readLine();
+            r.close();
+            p.waitFor();
+            if (line != null && line.contains("uid=0")) return 1;
+        } catch (Throwable ignored) {}
+        return 0;
+    }
+
+    private boolean isLauncherTopByRoot() {
+        try {
+            Process p = Runtime.getRuntime().exec(new String[]{"su", "-c",
+                    "dumpsys activity activities | grep -m1 ResumedActivity"});
+            java.io.BufferedReader r = new java.io.BufferedReader(new java.io.InputStreamReader(p.getInputStream()));
+            String line = r.readLine();
+            r.close();
+            p.waitFor();
+            return line != null && line.contains("com.android.launcher");
+        } catch (Throwable t) {
+            return true;
+        }
+    }
+
     private boolean isLauncherForeground() {
         try {
             android.app.usage.UsageStatsManager usm = (android.app.usage.UsageStatsManager)
                     getSystemService(USAGE_STATS_SERVICE);
             if (usm == null) return true;
             long now = System.currentTimeMillis();
-            List<android.app.usage.UsageStats> list =
-                    usm.queryUsageStats(android.app.usage.UsageStatsManager.INTERVAL_DAILY, now - 120000, now);
-            if (list == null || list.isEmpty()) return true;
-            String fg = null;
-            long last = 0;
-            for (android.app.usage.UsageStats st : list) {
-                if (st.getLastTimeUsed() > last) {
-                    last = st.getLastTimeUsed();
-                    fg = st.getPackageName();
+            android.app.usage.UsageEvents ev = usm.queryEvents(now - 15000, now);
+            if (ev == null) return true;
+            android.app.usage.UsageEvents.Event e = new android.app.usage.UsageEvents.Event();
+            String last = null;
+            while (ev.hasNextEvent()) {
+                ev.getNextEvent(e);
+                if (e.getEventType() == android.app.usage.UsageEvents.Event.ACTIVITY_RESUMED) {
+                    last = e.getPackageName();
                 }
             }
-            return "com.android.launcher".equals(fg);
+            // 最近 15 秒内没有前台事件时不要贸然暂停。
+            if (last == null) return true;
+            return "com.android.launcher".equals(last);
         } catch (Throwable t) {
             return true;
         }
@@ -343,66 +394,98 @@ public class LyricService extends Service {
     private long lastDbgAt = 0;
     private long lastFetchTry = 0;
 
-    private void refresh() {
-        if (!enabled()) return;
-        ensureMediaListener();
-        updateActive();
+    private volatile boolean reading = false;
+    private volatile boolean launcherFg = true;
+    private volatile int rootState = -1; // -1 未检测, 0 无, 1 有
+    private long lastRootCheck = 0;
+    private volatile long readingAt = 0;
 
+    private static final class Snapshot {
         String t = "", a = "";
         long pos = 0;
         int st = PlaybackState.STATE_NONE;
         String lyricInfo = null;
-        providerLine = null;
+        String providerLine = null;
         android.graphics.Bitmap art = null;
+    }
 
-        long tMeta0 = SystemClock.elapsedRealtime();
-        if (active != null) {
-            MediaMetadata md = active.getMetadata();
-            long tMeta1 = SystemClock.elapsedRealtime();
-            PlaybackState ps = active.getPlaybackState();
-            long tMeta2 = SystemClock.elapsedRealtime();
-            long mdMs = tMeta1 - tMeta0, psMs = tMeta2 - tMeta1;
-            if (mdMs > 50 || psMs > 50) dbg("binder md=" + mdMs + " ps=" + psMs);
+    /** MediaController 的 Binder 调用在播放器卡顿时会阻塞，绝不能放主线程。 */
+    private void readState(Snapshot s) {
+        updateActive();
+        MediaController act = active;
+        if (act != null) {
+            MediaMetadata md = act.getMetadata();
+            PlaybackState ps = act.getPlaybackState();
             if (md != null) {
                 String rawTitle = nz(md.getString(MediaMetadata.METADATA_KEY_TITLE));
                 String rawArtist = nz(md.getString(MediaMetadata.METADATA_KEY_ARTIST));
                 if (rawArtist.isEmpty()) rawArtist = nz(md.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST));
                 String dispTitle = nz(md.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE));
-                lyricInfo = md.getString("lyricInfo");
-                // 有的 Provider 不写 lyricInfo，而是把当前歌词行塞进标题，
-                // 同时把歌手字段改成「歌曲名 - 歌手」，这里还原真实信息。
-                t = rawTitle;
-                a = rawArtist;
-                if (lyricInfo == null || lyricInfo.isEmpty()) {
+                s.lyricInfo = md.getString("lyricInfo");
+                s.t = rawTitle;
+                s.a = rawArtist;
+                if (s.lyricInfo == null || s.lyricInfo.isEmpty()) {
                     if (!dispTitle.isEmpty() && !dispTitle.equals(rawTitle)) {
-                        t = dispTitle;
-                        providerLine = rawTitle;
+                        s.t = dispTitle;
+                        s.providerLine = rawTitle;
                     } else {
                         int sep = rawArtist.lastIndexOf(" - ");
                         if (sep > 0) {
                             String songName = rawArtist.substring(0, sep).trim();
                             String singer = rawArtist.substring(sep + 3).trim();
                             if (!songName.isEmpty() && !singer.isEmpty() && !songName.equals(rawTitle)) {
-                                t = songName;
-                                a = singer;
-                                providerLine = rawTitle;
+                                s.t = songName;
+                                s.a = singer;
+                                s.providerLine = rawTitle;
                             }
                         }
                     }
                 }
-                art = md.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART);
-                if (art == null) art = md.getBitmap(MediaMetadata.METADATA_KEY_ART);
+                s.art = md.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART);
+                if (s.art == null) s.art = md.getBitmap(MediaMetadata.METADATA_KEY_ART);
             }
             if (ps != null) {
-                st = ps.getState();
-                pos = ps.getPosition();
+                s.st = ps.getState();
+                s.pos = ps.getPosition();
                 float speed = ps.getPlaybackSpeed() > 0 ? ps.getPlaybackSpeed() : 1f;
-                if (st == PlaybackState.STATE_PLAYING) {
-                    pos += (long) ((SystemClock.elapsedRealtime() - ps.getLastPositionUpdateTime()) * speed);
+                if (s.st == PlaybackState.STATE_PLAYING) {
+                    s.pos += (long) ((SystemClock.elapsedRealtime() - ps.getLastPositionUpdateTime()) * speed);
                 }
             }
         }
-        // 词幕订阅桥：Provider 只把当前行写进标题时，桥能给出完整歌词和真实歌名。
+    }
+
+    private void refresh() {
+        if (!enabled()) return;
+        if (reading) {
+            // 后台 Binder 卡住时不能让刷新永久停摆，超过 3 秒强制复位。
+            if (SystemClock.elapsedRealtime() - readingAt < 3000) return;
+            reading = false;
+        }
+        reading = true;
+        readingAt = SystemClock.elapsedRealtime();
+        ensureMediaListener();
+        io.execute(new Runnable() {
+            @Override public void run() {
+                final Snapshot snap = new Snapshot();
+                try { readState(snap); } catch (Throwable ignored) {}
+                main.post(new Runnable() {
+                    @Override public void run() {
+                        reading = false;
+                        try { applySnapshot(snap); } catch (Throwable ignored) {}
+                    }
+                });
+            }
+        });
+    }
+
+    private void applySnapshot(Snapshot snap) {
+        String t = snap.t, a = snap.a;
+        long pos = snap.pos;
+        int st = snap.st;
+        String lyricInfo = snap.lyricInfo;
+        providerLine = snap.providerLine;
+        android.graphics.Bitmap art = snap.art;
         LyriconBridge bridge = LyriconBridge.get(this);
         Lyric bridgeLyric = bridge.getLyric();
         // 播放器已经停止/退出（没有活动会话）时，不再使用桥里残留的旧歌词，

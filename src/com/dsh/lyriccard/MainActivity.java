@@ -108,7 +108,7 @@ public class MainActivity extends Activity {
         addButton(quick, "添加桌面卡片", new View.OnClickListener() {
             @Override public void onClick(View v) { requestPin(); }
         });
-        addButton(quick, "授予使用情况访问（未root用户省电判断）", new View.OnClickListener() {
+        addButton(quick, "授予使用情况访问", new View.OnClickListener() {
             @Override public void onClick(View v) {
                 try {
                     startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
@@ -192,6 +192,8 @@ public class MainActivity extends Activity {
         addSwitch(look, "无歌词时在线匹配", "online", false);
         addSwitch2(look, "未root无provider兼容模式", "（在线匹配歌词，可能存在轻微延迟）", "compat", false);
         addSwitch2(look, "后台持续更新（前台服务）", "会在通知栏添加一条静默通知，防止系统冻结歌词服务", "foreground", true);
+        addSwitch(look, "离开桌面暂停刷新（Root）", "pause_root", false);
+        addSwitch(look, "离开桌面暂停刷新（未root）", "pause_usage", false);
         addSwitch(look, "紧凑模式（4×1 等矮卡片）", "compact", false);
         addSwitch(look, "隐藏最近任务卡片", "hide_recents", true);
         addItalicMode(look);
