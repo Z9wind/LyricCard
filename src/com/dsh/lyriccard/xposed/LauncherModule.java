@@ -95,7 +95,43 @@ public final class LauncherModule extends XposedModule {
 
     private static int lastW, lastH;
 
+    private static volatile android.os.Messenger visMessenger;
+    private static volatile boolean pendingVisible = true;
+
+    private static final android.content.ServiceConnection VIS_CONN =
+            new android.content.ServiceConnection() {
+        @Override public void onServiceConnected(android.content.ComponentName name, android.os.IBinder service) {
+            try {
+                visMessenger = new android.os.Messenger(service);
+                sendVisibility(pendingVisible);
+            } catch (Throwable ignored) {}
+        }
+        @Override public void onServiceDisconnected(android.content.ComponentName name) {
+            visMessenger = null;
+        }
+    };
+
+    private static void sendVisibility(boolean visible) {
+        try {
+            if (visMessenger == null) return;
+            android.os.Message m = android.os.Message.obtain(null, 1);
+            m.arg1 = visible ? 1 : 0;
+            visMessenger.send(m);
+        } catch (Throwable ignored) {}
+    }
+
     private void sendVisible(Activity act, boolean visible) {
+        pendingVisible = visible;
+        try {
+            if (visMessenger == null) {
+                android.content.Intent si = new android.content.Intent();
+                si.setComponent(new android.content.ComponentName(
+                        "com.dsh.lyriccard", "com.dsh.lyriccard.VisibilityService"));
+                act.bindService(si, VIS_CONN, android.content.Context.BIND_AUTO_CREATE);
+            } else {
+                sendVisibility(visible);
+            }
+        } catch (Throwable ignored) {}
         try {
             Intent i = new Intent("com.dsh.lyriccard.LAUNCHER");
             i.setPackage("com.dsh.lyriccard");

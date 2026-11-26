@@ -143,6 +143,15 @@ public class LyricService extends Service {
         } catch (Throwable ignored) {}
         createChannel();
         registerSizeReceiver();
+        // 任何设置变化都要让小组件重建（斜体、字体、对齐、配色等）。
+        try {
+            getSharedPreferences("settings", MODE_PRIVATE)
+                    .registerOnSharedPreferenceChangeListener(new android.content.SharedPreferences.OnSharedPreferenceChangeListener() {
+                        @Override public void onSharedPreferenceChanged(android.content.SharedPreferences sp, String key) {
+                            lastPushKey = "";
+                        }
+                    });
+        } catch (Throwable ignored) {}
         startLauncherWatcher();
         try { LyriconBridge.get(this).register(); } catch (Throwable ignored) {}
         running = true;
@@ -262,9 +271,17 @@ public class LyricService extends Service {
             // 离开桌面就暂停读取和刷新，回桌面由可见性广播立即恢复，省电。
 
             android.content.SharedPreferences ps = getSharedPreferences("settings", MODE_PRIVATE);
-            if ((ps.getBoolean("pause_root", false) || ps.getBoolean("pause_usage", false))
-                    && !launcherFg) {
-                main.postDelayed(this, 500);
+            boolean pauseRoot = ps.getBoolean("pause_root", false);
+            boolean pauseUsage = ps.getBoolean("pause_usage", false);
+            boolean visible = true;
+            if (pauseRoot) {
+                // LSP 事件驱动；还没收到过事件时按可见处理，避免误暂停。
+                visible = VisibilityService.lastEventAt == 0 || VisibilityService.lspVisible;
+            } else if (pauseUsage) {
+                visible = launcherFg;
+            }
+            if (!visible) {
+                main.postDelayed(this, 250);
                 return;
             }
             long now = SystemClock.elapsedRealtime();
@@ -301,18 +318,25 @@ public class LyricService extends Service {
                 while (running) {
                     try {
                         android.content.SharedPreferences ps = getSharedPreferences("settings", MODE_PRIVATE);
-                        boolean useRoot = ps.getBoolean("pause_root", false) && rootState != 0;
+                        boolean useRoot = ps.getBoolean("pause_root", false);
                         boolean useUsage = ps.getBoolean("pause_usage", false);
                         if (useRoot) {
-                            long nowMs = SystemClock.elapsedRealtime();
-                            if (rootState == -1 || (rootState == 0 && nowMs - lastRootCheck > 30000)) {
-                                lastRootCheck = nowMs;
-                                rootState = checkRoot();
+                            // 优先用 LSP 推来的可见性；没收到过事件时才用 su 兜底。
+                            if (VisibilityService.lastEventAt > 0) {
+                                launcherFg = VisibilityService.lspVisible;
+                            } else {
+                                long nowMs = SystemClock.elapsedRealtime();
+                                if (rootState == -1 || (rootState == 0 && nowMs - lastRootCheck > 30000)) {
+                                    lastRootCheck = nowMs;
+                                    rootState = checkRoot();
+                                }
+                                launcherFg = rootState == 1 ? isLauncherTopByRoot() : isLauncherForeground();
                             }
+                        } else if (useUsage) {
+                            launcherFg = isLauncherForeground();
+                        } else {
+                            launcherFg = true;
                         }
-                        if (useRoot && rootState == 1) launcherFg = isLauncherTopByRoot();
-                        else if (useUsage) launcherFg = isLauncherForeground();
-                        else launcherFg = true;
                     } catch (Throwable ignored) {}
                     try { Thread.sleep(3000); } catch (InterruptedException e) { return; }
                 }
@@ -753,6 +777,7 @@ public class LyricService extends Service {
         int mode = getSharedPreferences("settings", MODE_PRIVATE).getInt("italic_mode", 0);
         int[] layouts = mode == 1 ? WIDGET_IT : mode == 2 ? WIDGET_TI : mode == 3 ? WIDGET_AI : WIDGET_LAYOUTS;
         RemoteViews rv = new RemoteViews(getPackageName(), layouts[hueIndex]);
+
         rv.setTextViewText(R.id.title, title.isEmpty() ? emptyTitle : title);
         rv.setTextViewText(R.id.artist, artist);
         float sw = w / 300f, sh = h / 110f;

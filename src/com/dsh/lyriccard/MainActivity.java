@@ -408,8 +408,14 @@ public class MainActivity extends Activity {
 
     private void addItalicMode(LinearLayout root) {
         TextView tv = new TextView(this);
-        tv.setText("斜体模式");
-        tv.setTextColor(ON_VARIANT);
+        android.text.SpannableString italicTitle = new android.text.SpannableString("斜体模式（部分设备可能不生效）");
+        int noteIdx = italicTitle.toString().indexOf('（');
+        if (noteIdx >= 0) {
+            italicTitle.setSpan(new android.text.style.ForegroundColorSpan(ON_VARIANT),
+                    noteIdx, italicTitle.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+        tv.setText(italicTitle);
+        tv.setTextColor(ON_SURFACE);
         tv.setTextSize(12);
         tv.setPadding(0, dp(10), 0, 0);
         root.addView(tv);
