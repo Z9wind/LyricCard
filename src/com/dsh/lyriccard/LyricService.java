@@ -36,7 +36,7 @@ import java.util.concurrent.Executors;
 public class LyricService extends Service {
     private static final String CHANNEL = "lyriccard_fg";
     private static final int NOTIFY_ID = 0x4c47;
-    private static final long TICK_MS = 100;
+    private static final long TICK_MS = 250;
     private static final long WIDGET_MS = 200;
 
     private static final int[] WIDGET_LAYOUTS = {
@@ -693,7 +693,13 @@ public class LyricService extends Service {
                 * getResources().getDisplayMetrics().density);
     }
 
+    private String lastPushKey = "";
+
     private void pushWidget(long pos) {
+        String cacheKey = pos / 1000 + "|" + title + "|" + artist + "|" + glowColor
+                + "|" + (lyric == null ? -1 : lyric.indexAt(pos)) + "|" + lyricKey;
+        if (cacheKey.equals(lastPushKey)) return;
+        lastPushKey = cacheKey;
         AppWidgetManager mgr = AppWidgetManager.getInstance(this);
         int[] ids = mgr.getAppWidgetIds(new ComponentName(this, LyricWidgetProvider.class));
         if (ids == null || ids.length == 0) return;
