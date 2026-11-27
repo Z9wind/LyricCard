@@ -22,7 +22,7 @@ import java.lang.reflect.Method;
 /** 把歌词卡片放进桌面 Workspace 的格子容器，随页面滚动。 */
 final class LyricOverlay {
     static final String ACTION = "com.dsh.lyriccard.LYRIC";
-    private static final String TAG = "LyricGlassX.card";
+    private static final String TAG = "LyricCardX.card";
     private static final String WORKSPACE = "Workspace";
     private static final String SHORTCUTS = "ShortcutAndWidgetContainer";
     private static final String CELL_LP = "com.android.launcher3.celllayout.CellLayoutLayoutParams";

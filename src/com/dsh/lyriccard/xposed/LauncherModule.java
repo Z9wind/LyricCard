@@ -10,7 +10,7 @@ import io.github.libxposed.api.XposedModuleInterface;
 
 /** LSPosed 入口：只负责判断桌面是否在前台并发广播，不碰桌面视图。 */
 public final class LauncherModule extends XposedModule {
-    private static final String TAG = "LyricGlassX";
+    private static final String TAG = "LyricCardX";
     private static final String LAUNCHER = "com.android.launcher";
     private static final String LAUNCHER_CLASS = "com.android.launcher3.Launcher";
 

@@ -115,30 +115,61 @@ public final class Lyric {
     public static int dominantColor(android.graphics.Bitmap bmp) {
         if (bmp == null) return 0;
         try {
-            int size = 32;
+            int size = 40;
             android.graphics.Bitmap s = android.graphics.Bitmap.createScaledBitmap(bmp, size, size, true);
             int[] px = new int[size * size];
             s.getPixels(px, 0, size, 0, 0, size, size);
             float[] hsv = new float[3];
+            // 主逻辑：按“饱和度×亮度”加权找彩色主色（红底/红字封面能取到红）。
+            // 兜底：封面几乎没有彩色（黑白/灰白）时，用中性桶的平均色，避免取不到色而沿用旧颜色。
             double[] w = new double[12];
             long[] rr = new long[12], gg = new long[12], bb = new long[12];
+            int neutralCnt = 0;
+            long nr = 0, ng = 0, nb = 0;
+            int valid = 0;
             for (int c : px) {
                 if ((c >>> 24) < 128) continue;
+                valid++;
                 android.graphics.Color.colorToHSV(c, hsv);
-                if (hsv[1] < 0.22f || hsv[2] < 0.15f || hsv[2] > 0.96f) continue;
-                int h = Math.min(11, (int) (hsv[0] / 30f));
+                if (hsv[2] < 0.08f) continue;
+                if (hsv[1] < 0.22f || hsv[2] < 0.15f || hsv[2] > 0.96f) {
+                    neutralCnt++;
+                    nr += (c >> 16) & 0xFF;
+                    ng += (c >> 8) & 0xFF;
+                    nb += c & 0xFF;
+                    continue;
+                }
+                int idx = Math.min(11, (int) (hsv[0] / 30f));
                 double wt = hsv[1] * hsv[2];
-                w[h] += wt;
-                rr[h] += (long) (((c >> 16) & 0xFF) * wt);
-                gg[h] += (long) (((c >> 8) & 0xFF) * wt);
-                bb[h] += (long) ((c & 0xFF) * wt);
+                w[idx] += wt;
+                rr[idx] += (long) (((c >> 16) & 0xFF) * wt);
+                gg[idx] += (long) (((c >> 8) & 0xFF) * wt);
+                bb[idx] += (long) ((c & 0xFF) * wt);
             }
             int best = -1;
             for (int i = 0; i < 12; i++) if (w[i] > 0.01 && (best < 0 || w[i] > w[best])) best = i;
-            if (best < 0) return 0;
-            int r = (int) (rr[best] / w[best]);
-            int g = (int) (gg[best] / w[best]);
-            int b = (int) (bb[best] / w[best]);
+            int r, g, b;
+            if (best >= 0) {
+                r = (int) (rr[best] / w[best]);
+                g = (int) (gg[best] / w[best]);
+                b = (int) (bb[best] / w[best]);
+            } else if (neutralCnt > 0) {
+                r = (int) (nr / neutralCnt);
+                g = (int) (ng / neutralCnt);
+                b = (int) (nb / neutralCnt);
+            } else {
+                return 0;
+            }
+            // 深色主色提亮一点，避免发光看不见
+            float[] h2 = new float[3];
+            android.graphics.Color.colorToHSV(0xFF000000 | (r << 16) | (g << 8) | b, h2);
+            if (h2[2] < 0.3f) {
+                h2[2] = 0.45f;
+                int c2 = android.graphics.Color.HSVToColor(h2);
+                r = (c2 >> 16) & 0xFF;
+                g = (c2 >> 8) & 0xFF;
+                b = c2 & 0xFF;
+            }
             return 0xFF000000 | (r << 16) | (g << 8) | b;
         } catch (Throwable t) {
             return 0;

@@ -22,7 +22,7 @@ import java.util.Map;
 
 /** 在桌面进程内直接读 MediaSession，并本地插值刷新，不经过 App 中转。 */
 final class LyricEngine {
-    private static final String TAG = "LyricGlassX.engine";
+    private static final String TAG = "LyricCardX.engine";
     private static final long TICK = 50;
     private static final String LAUNCHER = "com.android.launcher";
     private static final String NOTIFY_LISTENER = "com.android.launcher3.notification.NotificationListener";

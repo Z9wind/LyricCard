@@ -22,7 +22,12 @@ VER_FILE="$ROOT/.build_num"
 VER_CODE=$(cat "$VER_FILE" 2>/dev/null || echo 3)
 VER_CODE=$((VER_CODE + 1))
 echo "$VER_CODE" > "$VER_FILE"
-VER_NAME="2.$VER_CODE"
+NAME_FILE="$ROOT/.version"
+if [ -f "$NAME_FILE" ]; then
+  VER_NAME=$(tr -d ' \r\n' < "$NAME_FILE")
+else
+  VER_NAME="2.$VER_CODE"
+fi
 
 echo "[3/8] aapt2 link"
 "$AAPT2" link -o "$OUT/base.apk" -I "$AJ" \
@@ -53,15 +58,15 @@ echo "[7/8] sign"
 if [ ! -f "$OUT/debug.keystore" ]; then
   keytool -genkeypair -keystore "$OUT/debug.keystore" -alias lg \
     -keyalg RSA -keysize 2048 -validity 10000 \
-    -storepass android -keypass android -dname "CN=LyricGlass,OU=DSH,O=DSH,C=CN" >/dev/null 2>&1
+    -storepass android -keypass android -dname "CN=LyricCard,OU=DSH,O=DSH,C=CN" >/dev/null 2>&1
 fi
-rm -f "$ROOT/LyricGlass.apk"
+rm -f "$ROOT/LyricCard.apk"
 java -jar "$BT/lib/apksigner.jar" sign \
   --ks "$OUT/debug.keystore" --ks-pass pass:android --key-pass pass:android \
-  --out "$ROOT/LyricGlass.apk" "$OUT/unsigned.apk"
+  --out "$ROOT/LyricCard.apk" "$OUT/unsigned.apk"
 
 echo "[8/8] verify"
-java -jar "$BT/lib/apksigner.jar" verify "$ROOT/LyricGlass.apk" >/dev/null 2>&1 && echo "signature ok"
-unzip -l "$ROOT/LyricGlass.apk" | grep -E "META-INF/xposed|classes.dex" 
-echo "OK -> $ROOT/LyricGlass.apk"
-ls -lh "$ROOT/LyricGlass.apk"
+java -jar "$BT/lib/apksigner.jar" verify "$ROOT/LyricCard.apk" >/dev/null 2>&1 && echo "signature ok"
+unzip -l "$ROOT/LyricCard.apk" | grep -E "META-INF/xposed|classes.dex" 
+echo "OK -> $ROOT/LyricCard.apk"
+ls -lh "$ROOT/LyricCard.apk"

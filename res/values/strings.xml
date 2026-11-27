@@ -3,4 +3,5 @@
     <string name="app_name">LyricCard</string>
     <string name="widget_desc">液态玻璃歌词卡片</string>
     <string name="widget_empty">暂无播放</string>
+    <string name="a11y_desc">仅用于保持歌词服务进程存活，不读取屏幕内容、不执行任何操作。</string>
 </resources>

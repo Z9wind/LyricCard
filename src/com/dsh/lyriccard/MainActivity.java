@@ -22,6 +22,7 @@ import android.widget.TextView;
 
 public class MainActivity extends Activity {
     private TextView status;
+    private Button keepAliveBtn;
     private SharedPreferences sp;
     private int accent = 0xFF3D6BFF;
 
@@ -43,6 +44,8 @@ public class MainActivity extends Activity {
         super.onResume();
         applyRecents();
         updateStatus();
+        updateKeepAliveLabel();
+        autoCheckUpdate();
         LyricService.start(this);
         sendItalic();
         if (Build.VERSION.SDK_INT >= 33
@@ -99,6 +102,10 @@ public class MainActivity extends Activity {
         statusCard.addView(status);
 
         LinearLayout quick = card(root);
+        keepAliveBtn = addButton(quick, "无感保活", new View.OnClickListener() {
+            @Override public void onClick(View v) { showKeepAliveDialog(); }
+        });
+        updateKeepAliveLabel();
         addButton(quick, "授予通知使用权", new View.OnClickListener() {
             @Override public void onClick(View v) {
                 try { startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)); }
@@ -127,63 +134,56 @@ public class MainActivity extends Activity {
         groupTitle(root, "歌词颜色");
         LinearLayout colors = card(root);
 
-        TextView monetLabel = new TextView(this);
-        monetLabel.setText("系统莫奈色");
-        monetLabel.setTextColor(ON_VARIANT);
-        monetLabel.setTextSize(12);
-        colors.addView(monetLabel);
-        View monetSwatch = new View(this);
-        GradientDrawable mg = new GradientDrawable();
-        mg.setColor(readSystemAccent() | 0xFF000000);
-        mg.setCornerRadius(dp(12));
-        monetSwatch.setBackground(mg);
-        colors.addView(monetSwatch, new LinearLayout.LayoutParams(-1, dp(36)));
+        if (!sp.contains("color_mode")) {
+            sp.edit().putInt("color_mode", sp.getBoolean("monet", false) ? 2 : 1).apply();
+        }
+        int mode0 = sp.getInt("color_mode", 1);
+        if (mode0 == 2) { // 旧的 ColorOS 自读色已移除，回退到跟随封面
+            mode0 = 1;
+            sp.edit().putInt("color_mode", 1).apply();
+        }
 
-        TextView coverLabel = new TextView(this);
-        coverLabel.setText("当前封面取色");
-        coverLabel.setTextColor(ON_VARIANT);
-        coverLabel.setTextSize(12);
-        coverLabel.setPadding(0, dp(10), 0, 0);
-        colors.addView(coverLabel);
-        View coverSwatch = new View(this);
-        GradientDrawable cg = new GradientDrawable();
-        cg.setColor(sp.getInt("cover_color", 0xFFFFD68A) | 0xFF000000);
-        cg.setCornerRadius(dp(12));
-        coverSwatch.setBackground(cg);
-        colors.addView(coverSwatch, new LinearLayout.LayoutParams(-1, dp(36)));
+        addColorSwatch(colors, "系统默认色", readSystemAccent());
+        addColorSwatch(colors, "当前封面取色", sp.getInt("cover_color", 0xFFFFD68A));
 
-        final Switch monetSw = new Switch(this);
-        monetSw.setText("使用系统莫奈色（关闭则跟随封面取色）");
-        monetSw.setTextColor(ON_SURFACE);
-        monetSw.setTextSize(14);
-        monetSw.setChecked(sp.getBoolean("monet", false));
-        tintSwitch(monetSw);
-        LinearLayout.LayoutParams mslp = new LinearLayout.LayoutParams(-1, -2);
-        mslp.topMargin = dp(10);
-        colors.addView(monetSw, mslp);
-
-        final Switch coverSw = new Switch(this);
-        coverSw.setText("实时封面取色");
-        coverSw.setTextColor(ON_SURFACE);
-        coverSw.setTextSize(14);
-        coverSw.setChecked(!sp.getBoolean("monet", false));
-        tintSwitch(coverSw);
-        LinearLayout.LayoutParams cslp = new LinearLayout.LayoutParams(-1, -2);
-        cslp.topMargin = dp(6);
-        colors.addView(coverSw, cslp);
-
-        monetSw.setOnCheckedChangeListener(new android.widget.CompoundButton.OnCheckedChangeListener() {
+        final Switch swDefault = new Switch(this);
+        swDefault.setText("使用系统默认色");
+        final Switch swCover = new Switch(this);
+        swCover.setText("跟随封面取色");
+        final boolean[] updating = {false};
+        final android.widget.CompoundButton.OnCheckedChangeListener modeListener =
+                new android.widget.CompoundButton.OnCheckedChangeListener() {
             @Override public void onCheckedChanged(android.widget.CompoundButton b, boolean v) {
-                sp.edit().putBoolean("monet", v).apply();
-                if (v && coverSw.isChecked()) coverSw.setChecked(false);
+                if (updating[0]) return;
+                boolean any = swDefault.isChecked() || swCover.isChecked();
+                if (!v && !any) {
+                    updating[0] = true;
+                    b.setChecked(true);
+                    updating[0] = false;
+                    return;
+                }
+                if (!v) return;
+                updating[0] = true;
+                swDefault.setChecked(b == swDefault);
+                swCover.setChecked(b == swCover);
+                sp.edit().putInt("color_mode", b == swDefault ? 0 : 1).apply();
+                updating[0] = false;
+                LyricService.start(MainActivity.this);
             }
-        });
-        coverSw.setOnCheckedChangeListener(new android.widget.CompoundButton.OnCheckedChangeListener() {
-            @Override public void onCheckedChanged(android.widget.CompoundButton b, boolean v) {
-                if (v && monetSw.isChecked()) monetSw.setChecked(false);
-                if (!v && !monetSw.isChecked()) monetSw.setChecked(true);
-            }
-        });
+        };
+        for (Switch sw : new Switch[]{swDefault, swCover}) {
+            sw.setTextColor(ON_SURFACE);
+            sw.setTextSize(14);
+            tintSwitch(sw);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
+            lp.topMargin = dp(6);
+            colors.addView(sw, lp);
+            sw.setOnCheckedChangeListener(modeListener);
+        }
+        updating[0] = true;
+        swDefault.setChecked(mode0 == 0);
+        swCover.setChecked(mode0 == 1);
+        updating[0] = false;
 
         groupTitle(root, "外观");
         LinearLayout look = card(root);
@@ -227,6 +227,11 @@ public class MainActivity extends Activity {
         addSlider(look, "背景不透明度", "bg_alpha", 100, 35);
         addFontSlider(look);
 
+        groupTitle(root, "文字样式");
+        LinearLayout glowCard = card(root);
+        addSlider(glowCard, "歌名透明度", "title_alpha", 100, 100);
+        addSlider(glowCard, "歌手名透明度", "artist_alpha", 100, 100);
+
         groupTitle(root, "自定义文本");
         LinearLayout texts = card(root);
         addEdit(texts, "无歌曲时标题", "empty_title", "LyricCard");
@@ -238,15 +243,6 @@ public class MainActivity extends Activity {
         addSlider(pads, "上边距", "pad_top", 40, 14);
         addSlider(pads, "右边距", "pad_right", 40, 14);
         addSlider(pads, "下边距", "pad_bottom", 40, 14);
-        addButton(pads, "恢复默认边距（14dp）", new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                for (String k : new String[]{"pad_left", "pad_top", "pad_right", "pad_bottom"}) {
-                    sp.edit().putInt(k, 14).apply();
-                    android.widget.SeekBar b = sliders.get(k);
-                    if (b != null) b.setProgress(14);
-                }
-            }
-        });
 
         LinearLayout restartCard = card(root);
         addButton(restartCard, "重启桌面（需 root）", new View.OnClickListener() {
@@ -261,7 +257,204 @@ public class MainActivity extends Activity {
         tip.setPadding(dp(4), dp(18), dp(4), 0);
         root.addView(tip);
 
-        setContentView(scroll);
+        homePage = scroll;
+        settingsPage = buildAppPage();
+        contentBox = new android.widget.FrameLayout(this);
+        contentBox.addView(homePage);
+        contentBox.addView(settingsPage);
+        LinearLayout shell = new LinearLayout(this);
+        shell.setOrientation(LinearLayout.VERTICAL);
+        shell.setBackgroundColor(surface);
+        shell.addView(contentBox, new LinearLayout.LayoutParams(-1, 0, 1));
+        shell.addView(buildBottomBar(), new LinearLayout.LayoutParams(-1, dp(54)));
+        setContentView(shell);
+        showTab(0);
+        applySystemBars();
+    }
+
+    private View homePage, settingsPage;
+    private android.widget.FrameLayout contentBox;
+    private TextView tabHome, tabSettings;
+
+    private ScrollView buildAppPage() {
+        ScrollView sc = new ScrollView(this);
+        sc.setBackgroundColor(surface);
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(20), dp(24), dp(20), dp(24));
+        sc.addView(root);
+
+        TextView title = new TextView(this);
+        title.setText("关于");
+        title.setTextColor(ON_SURFACE);
+        title.setTextSize(26);
+        title.setTypeface(null, Typeface.BOLD);
+        root.addView(title);
+
+        LinearLayout info = card(root);
+        TextView v = new TextView(this);
+        v.setText("LyricCard  版本 " + versionName());
+        v.setTextColor(ON_SURFACE);
+        v.setTextSize(14);
+        info.addView(v);
+        TextView repo = new TextView(this);
+        repo.setText("GitHub：" + UpdateChecker.repoUrl());
+        repo.setTextColor(accent);
+        repo.setTextSize(13);
+        repo.setPadding(0, dp(6), 0, 0);
+        repo.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View view) {
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW,
+                            android.net.Uri.parse(UpdateChecker.repoUrl())));
+                } catch (Throwable ignored) {}
+            }
+        });
+        info.addView(repo);
+
+        LinearLayout actions = card(root);
+        addButton(actions, "检查更新", new View.OnClickListener() {
+            @Override public void onClick(View view) { checkUpdate(true); }
+        });
+        addButton(actions, "来源", new View.OnClickListener() {
+            @Override public void onClick(View view) { showAbout(); }
+        });
+
+        return sc;
+    }
+
+    private LinearLayout buildBottomBar() {
+        LinearLayout bar = new LinearLayout(this);
+        bar.setOrientation(LinearLayout.HORIZONTAL);
+        bar.setBackgroundColor(container);
+        tabHome = tabItem("主页");
+        tabSettings = tabItem("关于");
+        bar.addView(tabHome, new LinearLayout.LayoutParams(0, -1, 1));
+        bar.addView(tabSettings, new LinearLayout.LayoutParams(0, -1, 1));
+        tabHome.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) { showTab(0); }
+        });
+        tabSettings.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) { showTab(1); }
+        });
+        return bar;
+    }
+
+    private TextView tabItem(String text) {
+        TextView t = new TextView(this);
+        t.setText(text);
+        t.setTextSize(15);
+        t.setGravity(android.view.Gravity.CENTER);
+        t.setTextColor(ON_VARIANT);
+        return t;
+    }
+
+    private void showTab(int i) {
+        if (homePage == null) return;
+        homePage.setVisibility(i == 0 ? View.VISIBLE : View.GONE);
+        settingsPage.setVisibility(i == 1 ? View.VISIBLE : View.GONE);
+        tabHome.setTextColor(i == 0 ? accent : ON_VARIANT);
+        tabSettings.setTextColor(i == 1 ? accent : ON_VARIANT);
+    }
+
+    /** 自动检查更新：默认开启，最多 24 小时一次。 */
+    private void autoCheckUpdate() {
+        try {
+            if (!sp.getBoolean("auto_update", true)) return;
+            long last = sp.getLong("last_update_check", 0);
+            if (System.currentTimeMillis() - last < 24L * 3600L * 1000L) return;
+            checkUpdate(false);
+        } catch (Throwable ignored) {}
+    }
+
+    private String versionName() {
+        try {
+            return getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+        } catch (Throwable t) {
+            return "?";
+        }
+    }
+
+    private void checkUpdate(final boolean manual) {
+        if (manual) android.widget.Toast.makeText(this, "正在检查更新…", android.widget.Toast.LENGTH_SHORT).show();
+        sp.edit().putLong("last_update_check", System.currentTimeMillis()).apply();
+        UpdateChecker.check(this, new UpdateChecker.Callback() {
+            @Override public void onResult(boolean ok, String version, final String url, String notes, String error) {
+                if (!ok) {
+                    if (manual) android.widget.Toast.makeText(MainActivity.this,
+                            "检查失败：" + error, android.widget.Toast.LENGTH_LONG).show();
+                    return;
+                }
+                String remote = version.startsWith("v") ? version.substring(1) : version;
+                if (remote.equals(versionName())) {
+                    if (manual) android.widget.Toast.makeText(MainActivity.this,
+                            "已是最新版本 " + versionName(), android.widget.Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                String msg = "发现新版本 " + version + "\n当前版本 " + versionName()
+                        + (notes == null || notes.isEmpty() ? "" : "\n\n" + notes);
+                new android.app.AlertDialog.Builder(MainActivity.this)
+                        .setTitle("检查更新")
+                        .setMessage(msg)
+                        .setPositiveButton("去下载", new android.content.DialogInterface.OnClickListener() {
+                            @Override public void onClick(android.content.DialogInterface d, int w) {
+                                try {
+                                    startActivity(new Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url)));
+                                } catch (Throwable ignored) {}
+                            }
+                        })
+                        .setNegativeButton("关闭", null)
+                        .show();
+            }
+        });
+    }
+
+    private void showAbout() {
+        String msg = "版本 " + versionName() + "\n\n"
+                + "开源仓库：\n" + UpdateChecker.repoUrl() + "\n\n"
+                + "致谢（思路与样式参考）：\n"
+                + "· ColorOS-Live-Lyrics-Bridge\n  https://github.com/Andrea-lyz/ColorOS-Live-Lyrics-Bridge\n"
+                + "· lyricon\n  https://github.com/Kifranei/lyricon\n"
+                + "· GKD\n  https://github.com/gkd-kit/gkd\n"
+                + "· LyricProvider\n  https://github.com/tomakino/LyricProvider";
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("来源")
+                .setMessage(msg)
+                .setPositiveButton("打开仓库", new android.content.DialogInterface.OnClickListener() {
+                    @Override public void onClick(android.content.DialogInterface d, int w) {
+                        try {
+                            startActivity(new Intent(Intent.ACTION_VIEW,
+                                    android.net.Uri.parse(UpdateChecker.repoUrl())));
+                        } catch (Throwable ignored) {}
+                    }
+                })
+                .setNegativeButton("关闭", null)
+                .show();
+    }
+
+    /** 让状态栏/导航栏颜色跟随页面底色，并按明暗自动切换图标颜色。 */
+    private void applySystemBars() {
+        try {
+            android.view.Window w = getWindow();
+            w.setStatusBarColor(surface);
+            w.setNavigationBarColor(surface);
+            double lum = 0.2126 * Color.red(surface) + 0.7152 * Color.green(surface) + 0.0722 * Color.blue(surface);
+            boolean darkBg = lum < 128;
+            if (Build.VERSION.SDK_INT >= 30) {
+                android.view.WindowInsetsController c = w.getInsetsController();
+                if (c != null) {
+                    int mask = android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                            | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
+                    c.setSystemBarsAppearance(darkBg ? 0 : mask, mask);
+                }
+            } else {
+                android.view.View decor = w.getDecorView();
+                int flags = decor.getSystemUiVisibility();
+                if (darkBg) flags &= ~android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                else flags |= android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                decor.setSystemUiVisibility(flags);
+            }
+        } catch (Throwable ignored) {}
     }
 
     private LinearLayout card(LinearLayout root) {
@@ -288,7 +481,100 @@ public class MainActivity extends Activity {
         root.addView(tv);
     }
 
-    private void addButton(LinearLayout root, String text, View.OnClickListener l) {
+    /** 依据无障碍开关和磁贴开关更新顶部按钮文案。 */
+    private void updateKeepAliveLabel() {
+        if (keepAliveBtn == null) return;
+        boolean a11y = isA11yEnabled();
+        boolean tile = sp.getBoolean("keep_alive", true);
+        if (a11y && tile) {
+            keepAliveBtn.setText("无感保活（已开启）");
+        } else {
+            String missing = !a11y && !tile ? "无障碍、磁贴" : (!a11y ? "无障碍" : "磁贴");
+            keepAliveBtn.setText("无感保活（未开启：缺" + missing + "）");
+        }
+    }
+
+    /** 无障碍服务是否已在系统设置里启用。 */
+    private boolean isA11yEnabled() {
+        try {
+            String enabled = Settings.Secure.getString(getContentResolver(),
+                    Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+            return enabled != null && enabled.contains(getPackageName() + "/");
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    /** 无感保活引导：无障碍 + 快捷磁贴两步，都不产生常驻通知。 */
+    private void showKeepAliveDialog() {
+        final boolean a11y = isA11yEnabled();
+        final boolean tile = sp.getBoolean("keep_alive", true);
+        String msg = "无感保活需要两步，都不会产生常驻通知：\n\n"
+                + "1. 开启无障碍" + (a11y ? "（已开启）" : "（未开启）")
+                + "\n   系统绑定该服务后，ColorOS 就不会冻结歌词进程。\n\n"
+                + "2. 在快捷设置里添加「歌词卡片」磁贴并点亮" + (tile ? "（磁贴开关当前为开）" : "（磁贴开关当前为关）")
+                + "\n   磁贴会把进程优先级提到前台级别，并拉起歌词服务。";
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("无感保活")
+                .setMessage(msg)
+                .setPositiveButton(a11y ? "添加/开启磁贴" : "去开启无障碍", new android.content.DialogInterface.OnClickListener() {
+                    @Override public void onClick(android.content.DialogInterface d, int w) {
+                        if (!a11y) {
+                            try { startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)); }
+                            catch (Exception e) { startActivity(new Intent(Settings.ACTION_SETTINGS)); }
+                        } else {
+                            addQsTile();
+                        }
+                    }
+                })
+                .setNeutralButton(a11y ? "无障碍设置" : "添加磁贴", new android.content.DialogInterface.OnClickListener() {
+                    @Override public void onClick(android.content.DialogInterface d, int w) {
+                        if (a11y) {
+                            try { startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)); }
+                            catch (Exception e) { startActivity(new Intent(Settings.ACTION_SETTINGS)); }
+                        } else {
+                            addQsTile();
+                        }
+                    }
+                })
+                .setNegativeButton("关闭", null)
+                .show();
+    }
+
+    /** 尝试直接请求系统添加快捷设置磁贴（Android 13+），失败则提示手动添加。 */
+    private void addQsTile() {
+        if (Build.VERSION.SDK_INT >= 33) {
+            try {
+                android.app.StatusBarManager sbm = getSystemService(android.app.StatusBarManager.class);
+                sbm.requestAddTileService(new ComponentName(this, LyricTile.class), "歌词卡片",
+                        android.graphics.drawable.Icon.createWithResource(this, R.drawable.ic_stat_lyric),
+                        getMainExecutor(), new java.util.function.Consumer<Integer>() {
+                            @Override public void accept(Integer result) {}
+                        });
+                return;
+            } catch (Throwable ignored) {}
+        }
+        android.widget.Toast.makeText(this, "请下拉通知栏 → 编辑快捷设置 → 添加「歌词卡片」并点亮",
+                android.widget.Toast.LENGTH_LONG).show();
+    }
+
+    private void addColorSwatch(LinearLayout root, String text, int color) {
+        TextView label = new TextView(this);
+        label.setText(text);
+        label.setTextColor(ON_VARIANT);
+        label.setTextSize(12);
+        label.setPadding(0, dp(10), 0, 0);
+        root.addView(label);
+        View sw = new View(this);
+        GradientDrawable g = new GradientDrawable();
+        g.setColor(color | 0xFF000000);
+        g.setCornerRadius(dp(12));
+        sw.setBackground(g);
+        root.addView(sw, new LinearLayout.LayoutParams(-1, dp(30)));
+    }
+
+
+    private Button addButton(LinearLayout root, String text, View.OnClickListener l) {
         Button b = new Button(this);
         b.setText(text);
         b.setAllCaps(false);
@@ -303,6 +589,7 @@ public class MainActivity extends Activity {
         lp.topMargin = dp(10);
         root.addView(b, lp);
         b.setOnClickListener(l);
+        return b;
     }
 
     private void applyRecents() {
@@ -483,7 +770,15 @@ public class MainActivity extends Activity {
         tv.setText("字体大小");
         tv.setTextColor(ON_VARIANT);
         tv.setTextSize(12);
-        row.addView(tv, new LinearLayout.LayoutParams(0, -2, 1));
+        row.addView(tv);
+        TextView resetFont = new TextView(this);
+        resetFont.setText("\u21BA");
+        resetFont.setTextColor(ON_VARIANT);
+        resetFont.setTextSize(16);
+        resetFont.setPadding(dp(6), 0, dp(6), 0);
+        row.addView(resetFont);
+        View spacer = new View(this);
+        row.addView(spacer, new LinearLayout.LayoutParams(0, 1, 1));
         final TextView value = new TextView(this);
         value.setText(sp.getInt("font_scale", 100) + "%");
         value.setTextColor(accent);
@@ -496,6 +791,12 @@ public class MainActivity extends Activity {
         bar.setProgress(sp.getInt("font_scale", 100));
         bar.setProgressTintList(ColorStateList.valueOf(accent));
         bar.setThumbTintList(ColorStateList.valueOf(accent));
+        resetFont.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                sp.edit().putInt("font_scale", 100).apply();
+                bar.setProgress(100);
+            }
+        });
         bar.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener() {
             @Override public void onProgressChanged(android.widget.SeekBar b, int v, boolean fromUser) {
                 sp.edit().putInt("font_scale", v).apply();
@@ -505,12 +806,6 @@ public class MainActivity extends Activity {
             @Override public void onStopTrackingTouch(android.widget.SeekBar b) {}
         });
         root.addView(bar, new LinearLayout.LayoutParams(-1, -2));
-        addButton(root, "恢复默认字体大小（100%）", new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                sp.edit().putInt("font_scale", 100).apply();
-                bar.setProgress(100);
-            }
-        });
     }
 
     private void addSlider(LinearLayout root, String label, final String key, int max, int def) {
@@ -522,18 +817,32 @@ public class MainActivity extends Activity {
         tv.setText(label);
         tv.setTextColor(ON_VARIANT);
         tv.setTextSize(12);
-        row.addView(tv, new LinearLayout.LayoutParams(0, -2, 1));
+        row.addView(tv);
+        TextView reset = new TextView(this);
+        reset.setText("\u21BA");
+        reset.setTextColor(ON_VARIANT);
+        reset.setTextSize(16);
+        reset.setPadding(dp(6), 0, dp(6), 0);
+        row.addView(reset);
+        View spacer = new View(this);
+        row.addView(spacer, new LinearLayout.LayoutParams(0, 1, 1));
         final TextView value = new TextView(this);
         value.setText(sp.getInt(key, def) + unit);
         value.setTextColor(accent);
         value.setTextSize(12);
         row.addView(value);
         root.addView(row);
-        android.widget.SeekBar bar = new android.widget.SeekBar(this);
+        final android.widget.SeekBar bar = new android.widget.SeekBar(this);
         bar.setMax(max);
         bar.setProgress(sp.getInt(key, def));
         bar.setProgressTintList(ColorStateList.valueOf(accent));
         bar.setThumbTintList(ColorStateList.valueOf(accent));
+        reset.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                sp.edit().putInt(key, def).apply();
+                bar.setProgress(def);
+            }
+        });
         bar.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener() {
             @Override public void onProgressChanged(android.widget.SeekBar b, int v, boolean fromUser) {
                 sp.edit().putInt(key, v).apply();

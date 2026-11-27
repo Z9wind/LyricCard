@@ -40,41 +40,17 @@ public class LyricService extends Service {
     private static final long WIDGET_MS = 200;
 
     private static final int[] WIDGET_LAYOUTS = {
-            R.layout.widget_lyric_c0, R.layout.widget_lyric_c1, R.layout.widget_lyric_c2, R.layout.widget_lyric_c3, R.layout.widget_lyric_c4, R.layout.widget_lyric_c5, R.layout.widget_lyric_c6, R.layout.widget_lyric_c7, R.layout.widget_lyric_c8, R.layout.widget_lyric_c9, R.layout.widget_lyric_c10, R.layout.widget_lyric_c11, R.layout.widget_lyric_c12, R.layout.widget_lyric_c13, R.layout.widget_lyric_c14, R.layout.widget_lyric_c15, R.layout.widget_lyric_c16, R.layout.widget_lyric_c17, R.layout.widget_lyric_c18, R.layout.widget_lyric_c19, R.layout.widget_lyric_c20, R.layout.widget_lyric_c21, R.layout.widget_lyric_c22, R.layout.widget_lyric_c23, R.layout.widget_lyric_c24, R.layout.widget_lyric_c25, R.layout.widget_lyric_c26, R.layout.widget_lyric_c27, R.layout.widget_lyric_c28, R.layout.widget_lyric_c29, R.layout.widget_lyric_c30, R.layout.widget_lyric_c31, R.layout.widget_lyric_c32, R.layout.widget_lyric_c33, R.layout.widget_lyric_c34, R.layout.widget_lyric_c35
+            R.layout.widget_lyric_c0, R.layout.widget_lyric_c1, R.layout.widget_lyric_c2, R.layout.widget_lyric_c3, R.layout.widget_lyric_c4, R.layout.widget_lyric_c5, R.layout.widget_lyric_c6, R.layout.widget_lyric_c7, R.layout.widget_lyric_c8, R.layout.widget_lyric_c9, R.layout.widget_lyric_c10, R.layout.widget_lyric_c11, R.layout.widget_lyric_c12, R.layout.widget_lyric_c13, R.layout.widget_lyric_c14, R.layout.widget_lyric_c15, R.layout.widget_lyric_c16, R.layout.widget_lyric_c17, R.layout.widget_lyric_c18, R.layout.widget_lyric_c19, R.layout.widget_lyric_c20, R.layout.widget_lyric_c21, R.layout.widget_lyric_c22, R.layout.widget_lyric_c23, R.layout.widget_lyric_c24, R.layout.widget_lyric_c25, R.layout.widget_lyric_c26, R.layout.widget_lyric_c27, R.layout.widget_lyric_c28, R.layout.widget_lyric_c29, R.layout.widget_lyric_c30, R.layout.widget_lyric_c31, R.layout.widget_lyric_c32, R.layout.widget_lyric_c33, R.layout.widget_lyric_c34, R.layout.widget_lyric_c35, R.layout.widget_lyric_c36, R.layout.widget_lyric_c37, R.layout.widget_lyric_c38, R.layout.widget_lyric_c39, R.layout.widget_lyric_c40, R.layout.widget_lyric_c41, R.layout.widget_lyric_c42, R.layout.widget_lyric_c43, R.layout.widget_lyric_c44, R.layout.widget_lyric_c45, R.layout.widget_lyric_c46, R.layout.widget_lyric_c47, R.layout.widget_lyric_c48, R.layout.widget_lyric_c49, R.layout.widget_lyric_c50, R.layout.widget_lyric_c51, R.layout.widget_lyric_c52, R.layout.widget_lyric_c53, R.layout.widget_lyric_c54, R.layout.widget_lyric_c55, R.layout.widget_lyric_c56, R.layout.widget_lyric_c57, R.layout.widget_lyric_c58, R.layout.widget_lyric_c59, R.layout.widget_lyric_c60, R.layout.widget_lyric_c61, R.layout.widget_lyric_c62, R.layout.widget_lyric_c63, R.layout.widget_lyric_c64, R.layout.widget_lyric_c65, R.layout.widget_lyric_c66, R.layout.widget_lyric_c67, R.layout.widget_lyric_c68, R.layout.widget_lyric_c69, R.layout.widget_lyric_c70, R.layout.widget_lyric_c71, R.layout.widget_lyric_c72, R.layout.widget_lyric_c73, R.layout.widget_lyric_c74, R.layout.widget_lyric_c75, R.layout.widget_lyric_c76, R.layout.widget_lyric_c77, R.layout.widget_lyric_c78, R.layout.widget_lyric_c79, R.layout.widget_lyric_c80, R.layout.widget_lyric_c81, R.layout.widget_lyric_c82, R.layout.widget_lyric_c83, R.layout.widget_lyric_c84, R.layout.widget_lyric_c85, R.layout.widget_lyric_c86, R.layout.widget_lyric_c87, R.layout.widget_lyric_c88, R.layout.widget_lyric_c89, R.layout.widget_lyric_c90, R.layout.widget_lyric_c91, R.layout.widget_lyric_c92, R.layout.widget_lyric_c93, R.layout.widget_lyric_c94, R.layout.widget_lyric_c95, R.layout.widget_lyric_c96, R.layout.widget_lyric_c97, R.layout.widget_lyric_c98, R.layout.widget_lyric_c99, R.layout.widget_lyric_c100, R.layout.widget_lyric_c101, R.layout.widget_lyric_c102, R.layout.widget_lyric_c103, R.layout.widget_lyric_c104, R.layout.widget_lyric_c105, R.layout.widget_lyric_c106, R.layout.widget_lyric_c107, R.layout.widget_lyric_c108, R.layout.widget_lyric_c109, R.layout.widget_lyric_c110, R.layout.widget_lyric_c111, R.layout.widget_lyric_c112, R.layout.widget_lyric_c113, R.layout.widget_lyric_c114, R.layout.widget_lyric_c115, R.layout.widget_lyric_c116, R.layout.widget_lyric_c117, R.layout.widget_lyric_c118, R.layout.widget_lyric_c119, R.layout.widget_lyric_c120, R.layout.widget_lyric_c121, R.layout.widget_lyric_c122, R.layout.widget_lyric_c123, R.layout.widget_lyric_c124, R.layout.widget_lyric_c125, R.layout.widget_lyric_c126, R.layout.widget_lyric_c127
     };
 
     private static final int[] WIDGET_IT = {
-            R.layout.widget_lyric_it_c0, R.layout.widget_lyric_it_c1, R.layout.widget_lyric_it_c2, R.layout.widget_lyric_it_c3,
-            R.layout.widget_lyric_it_c4, R.layout.widget_lyric_it_c5, R.layout.widget_lyric_it_c6, R.layout.widget_lyric_it_c7,
-            R.layout.widget_lyric_it_c8, R.layout.widget_lyric_it_c9, R.layout.widget_lyric_it_c10, R.layout.widget_lyric_it_c11,
-            R.layout.widget_lyric_it_c12, R.layout.widget_lyric_it_c13, R.layout.widget_lyric_it_c14, R.layout.widget_lyric_it_c15,
-            R.layout.widget_lyric_it_c16, R.layout.widget_lyric_it_c17, R.layout.widget_lyric_it_c18, R.layout.widget_lyric_it_c19,
-            R.layout.widget_lyric_it_c20, R.layout.widget_lyric_it_c21, R.layout.widget_lyric_it_c22, R.layout.widget_lyric_it_c23,
-            R.layout.widget_lyric_it_c24, R.layout.widget_lyric_it_c25, R.layout.widget_lyric_it_c26, R.layout.widget_lyric_it_c27,
-            R.layout.widget_lyric_it_c28, R.layout.widget_lyric_it_c29, R.layout.widget_lyric_it_c30, R.layout.widget_lyric_it_c31,
-            R.layout.widget_lyric_it_c32, R.layout.widget_lyric_it_c33, R.layout.widget_lyric_it_c34, R.layout.widget_lyric_it_c35,
+            R.layout.widget_lyric_it_c0, R.layout.widget_lyric_it_c1, R.layout.widget_lyric_it_c2, R.layout.widget_lyric_it_c3, R.layout.widget_lyric_it_c4, R.layout.widget_lyric_it_c5, R.layout.widget_lyric_it_c6, R.layout.widget_lyric_it_c7, R.layout.widget_lyric_it_c8, R.layout.widget_lyric_it_c9, R.layout.widget_lyric_it_c10, R.layout.widget_lyric_it_c11, R.layout.widget_lyric_it_c12, R.layout.widget_lyric_it_c13, R.layout.widget_lyric_it_c14, R.layout.widget_lyric_it_c15, R.layout.widget_lyric_it_c16, R.layout.widget_lyric_it_c17, R.layout.widget_lyric_it_c18, R.layout.widget_lyric_it_c19, R.layout.widget_lyric_it_c20, R.layout.widget_lyric_it_c21, R.layout.widget_lyric_it_c22, R.layout.widget_lyric_it_c23, R.layout.widget_lyric_it_c24, R.layout.widget_lyric_it_c25, R.layout.widget_lyric_it_c26, R.layout.widget_lyric_it_c27, R.layout.widget_lyric_it_c28, R.layout.widget_lyric_it_c29, R.layout.widget_lyric_it_c30, R.layout.widget_lyric_it_c31, R.layout.widget_lyric_it_c32, R.layout.widget_lyric_it_c33, R.layout.widget_lyric_it_c34, R.layout.widget_lyric_it_c35, R.layout.widget_lyric_it_c36, R.layout.widget_lyric_it_c37, R.layout.widget_lyric_it_c38, R.layout.widget_lyric_it_c39, R.layout.widget_lyric_it_c40, R.layout.widget_lyric_it_c41, R.layout.widget_lyric_it_c42, R.layout.widget_lyric_it_c43, R.layout.widget_lyric_it_c44, R.layout.widget_lyric_it_c45, R.layout.widget_lyric_it_c46, R.layout.widget_lyric_it_c47, R.layout.widget_lyric_it_c48, R.layout.widget_lyric_it_c49, R.layout.widget_lyric_it_c50, R.layout.widget_lyric_it_c51, R.layout.widget_lyric_it_c52, R.layout.widget_lyric_it_c53, R.layout.widget_lyric_it_c54, R.layout.widget_lyric_it_c55, R.layout.widget_lyric_it_c56, R.layout.widget_lyric_it_c57, R.layout.widget_lyric_it_c58, R.layout.widget_lyric_it_c59, R.layout.widget_lyric_it_c60, R.layout.widget_lyric_it_c61, R.layout.widget_lyric_it_c62, R.layout.widget_lyric_it_c63, R.layout.widget_lyric_it_c64, R.layout.widget_lyric_it_c65, R.layout.widget_lyric_it_c66, R.layout.widget_lyric_it_c67, R.layout.widget_lyric_it_c68, R.layout.widget_lyric_it_c69, R.layout.widget_lyric_it_c70, R.layout.widget_lyric_it_c71, R.layout.widget_lyric_it_c72, R.layout.widget_lyric_it_c73, R.layout.widget_lyric_it_c74, R.layout.widget_lyric_it_c75, R.layout.widget_lyric_it_c76, R.layout.widget_lyric_it_c77, R.layout.widget_lyric_it_c78, R.layout.widget_lyric_it_c79, R.layout.widget_lyric_it_c80, R.layout.widget_lyric_it_c81, R.layout.widget_lyric_it_c82, R.layout.widget_lyric_it_c83, R.layout.widget_lyric_it_c84, R.layout.widget_lyric_it_c85, R.layout.widget_lyric_it_c86, R.layout.widget_lyric_it_c87, R.layout.widget_lyric_it_c88, R.layout.widget_lyric_it_c89, R.layout.widget_lyric_it_c90, R.layout.widget_lyric_it_c91, R.layout.widget_lyric_it_c92, R.layout.widget_lyric_it_c93, R.layout.widget_lyric_it_c94, R.layout.widget_lyric_it_c95, R.layout.widget_lyric_it_c96, R.layout.widget_lyric_it_c97, R.layout.widget_lyric_it_c98, R.layout.widget_lyric_it_c99, R.layout.widget_lyric_it_c100, R.layout.widget_lyric_it_c101, R.layout.widget_lyric_it_c102, R.layout.widget_lyric_it_c103, R.layout.widget_lyric_it_c104, R.layout.widget_lyric_it_c105, R.layout.widget_lyric_it_c106, R.layout.widget_lyric_it_c107, R.layout.widget_lyric_it_c108, R.layout.widget_lyric_it_c109, R.layout.widget_lyric_it_c110, R.layout.widget_lyric_it_c111, R.layout.widget_lyric_it_c112, R.layout.widget_lyric_it_c113, R.layout.widget_lyric_it_c114, R.layout.widget_lyric_it_c115, R.layout.widget_lyric_it_c116, R.layout.widget_lyric_it_c117, R.layout.widget_lyric_it_c118, R.layout.widget_lyric_it_c119, R.layout.widget_lyric_it_c120, R.layout.widget_lyric_it_c121, R.layout.widget_lyric_it_c122, R.layout.widget_lyric_it_c123, R.layout.widget_lyric_it_c124, R.layout.widget_lyric_it_c125, R.layout.widget_lyric_it_c126, R.layout.widget_lyric_it_c127
     };
     private static final int[] WIDGET_TI = {
-            R.layout.widget_lyric_ti_c0, R.layout.widget_lyric_ti_c1, R.layout.widget_lyric_ti_c2, R.layout.widget_lyric_ti_c3,
-            R.layout.widget_lyric_ti_c4, R.layout.widget_lyric_ti_c5, R.layout.widget_lyric_ti_c6, R.layout.widget_lyric_ti_c7,
-            R.layout.widget_lyric_ti_c8, R.layout.widget_lyric_ti_c9, R.layout.widget_lyric_ti_c10, R.layout.widget_lyric_ti_c11,
-            R.layout.widget_lyric_ti_c12, R.layout.widget_lyric_ti_c13, R.layout.widget_lyric_ti_c14, R.layout.widget_lyric_ti_c15,
-            R.layout.widget_lyric_ti_c16, R.layout.widget_lyric_ti_c17, R.layout.widget_lyric_ti_c18, R.layout.widget_lyric_ti_c19,
-            R.layout.widget_lyric_ti_c20, R.layout.widget_lyric_ti_c21, R.layout.widget_lyric_ti_c22, R.layout.widget_lyric_ti_c23,
-            R.layout.widget_lyric_ti_c24, R.layout.widget_lyric_ti_c25, R.layout.widget_lyric_ti_c26, R.layout.widget_lyric_ti_c27,
-            R.layout.widget_lyric_ti_c28, R.layout.widget_lyric_ti_c29, R.layout.widget_lyric_ti_c30, R.layout.widget_lyric_ti_c31,
-            R.layout.widget_lyric_ti_c32, R.layout.widget_lyric_ti_c33, R.layout.widget_lyric_ti_c34, R.layout.widget_lyric_ti_c35,
+            R.layout.widget_lyric_ti_c0, R.layout.widget_lyric_ti_c1, R.layout.widget_lyric_ti_c2, R.layout.widget_lyric_ti_c3, R.layout.widget_lyric_ti_c4, R.layout.widget_lyric_ti_c5, R.layout.widget_lyric_ti_c6, R.layout.widget_lyric_ti_c7, R.layout.widget_lyric_ti_c8, R.layout.widget_lyric_ti_c9, R.layout.widget_lyric_ti_c10, R.layout.widget_lyric_ti_c11, R.layout.widget_lyric_ti_c12, R.layout.widget_lyric_ti_c13, R.layout.widget_lyric_ti_c14, R.layout.widget_lyric_ti_c15, R.layout.widget_lyric_ti_c16, R.layout.widget_lyric_ti_c17, R.layout.widget_lyric_ti_c18, R.layout.widget_lyric_ti_c19, R.layout.widget_lyric_ti_c20, R.layout.widget_lyric_ti_c21, R.layout.widget_lyric_ti_c22, R.layout.widget_lyric_ti_c23, R.layout.widget_lyric_ti_c24, R.layout.widget_lyric_ti_c25, R.layout.widget_lyric_ti_c26, R.layout.widget_lyric_ti_c27, R.layout.widget_lyric_ti_c28, R.layout.widget_lyric_ti_c29, R.layout.widget_lyric_ti_c30, R.layout.widget_lyric_ti_c31, R.layout.widget_lyric_ti_c32, R.layout.widget_lyric_ti_c33, R.layout.widget_lyric_ti_c34, R.layout.widget_lyric_ti_c35, R.layout.widget_lyric_ti_c36, R.layout.widget_lyric_ti_c37, R.layout.widget_lyric_ti_c38, R.layout.widget_lyric_ti_c39, R.layout.widget_lyric_ti_c40, R.layout.widget_lyric_ti_c41, R.layout.widget_lyric_ti_c42, R.layout.widget_lyric_ti_c43, R.layout.widget_lyric_ti_c44, R.layout.widget_lyric_ti_c45, R.layout.widget_lyric_ti_c46, R.layout.widget_lyric_ti_c47, R.layout.widget_lyric_ti_c48, R.layout.widget_lyric_ti_c49, R.layout.widget_lyric_ti_c50, R.layout.widget_lyric_ti_c51, R.layout.widget_lyric_ti_c52, R.layout.widget_lyric_ti_c53, R.layout.widget_lyric_ti_c54, R.layout.widget_lyric_ti_c55, R.layout.widget_lyric_ti_c56, R.layout.widget_lyric_ti_c57, R.layout.widget_lyric_ti_c58, R.layout.widget_lyric_ti_c59, R.layout.widget_lyric_ti_c60, R.layout.widget_lyric_ti_c61, R.layout.widget_lyric_ti_c62, R.layout.widget_lyric_ti_c63, R.layout.widget_lyric_ti_c64, R.layout.widget_lyric_ti_c65, R.layout.widget_lyric_ti_c66, R.layout.widget_lyric_ti_c67, R.layout.widget_lyric_ti_c68, R.layout.widget_lyric_ti_c69, R.layout.widget_lyric_ti_c70, R.layout.widget_lyric_ti_c71, R.layout.widget_lyric_ti_c72, R.layout.widget_lyric_ti_c73, R.layout.widget_lyric_ti_c74, R.layout.widget_lyric_ti_c75, R.layout.widget_lyric_ti_c76, R.layout.widget_lyric_ti_c77, R.layout.widget_lyric_ti_c78, R.layout.widget_lyric_ti_c79, R.layout.widget_lyric_ti_c80, R.layout.widget_lyric_ti_c81, R.layout.widget_lyric_ti_c82, R.layout.widget_lyric_ti_c83, R.layout.widget_lyric_ti_c84, R.layout.widget_lyric_ti_c85, R.layout.widget_lyric_ti_c86, R.layout.widget_lyric_ti_c87, R.layout.widget_lyric_ti_c88, R.layout.widget_lyric_ti_c89, R.layout.widget_lyric_ti_c90, R.layout.widget_lyric_ti_c91, R.layout.widget_lyric_ti_c92, R.layout.widget_lyric_ti_c93, R.layout.widget_lyric_ti_c94, R.layout.widget_lyric_ti_c95, R.layout.widget_lyric_ti_c96, R.layout.widget_lyric_ti_c97, R.layout.widget_lyric_ti_c98, R.layout.widget_lyric_ti_c99, R.layout.widget_lyric_ti_c100, R.layout.widget_lyric_ti_c101, R.layout.widget_lyric_ti_c102, R.layout.widget_lyric_ti_c103, R.layout.widget_lyric_ti_c104, R.layout.widget_lyric_ti_c105, R.layout.widget_lyric_ti_c106, R.layout.widget_lyric_ti_c107, R.layout.widget_lyric_ti_c108, R.layout.widget_lyric_ti_c109, R.layout.widget_lyric_ti_c110, R.layout.widget_lyric_ti_c111, R.layout.widget_lyric_ti_c112, R.layout.widget_lyric_ti_c113, R.layout.widget_lyric_ti_c114, R.layout.widget_lyric_ti_c115, R.layout.widget_lyric_ti_c116, R.layout.widget_lyric_ti_c117, R.layout.widget_lyric_ti_c118, R.layout.widget_lyric_ti_c119, R.layout.widget_lyric_ti_c120, R.layout.widget_lyric_ti_c121, R.layout.widget_lyric_ti_c122, R.layout.widget_lyric_ti_c123, R.layout.widget_lyric_ti_c124, R.layout.widget_lyric_ti_c125, R.layout.widget_lyric_ti_c126, R.layout.widget_lyric_ti_c127
     };
     private static final int[] WIDGET_AI = {
-            R.layout.widget_lyric_ai_c0, R.layout.widget_lyric_ai_c1, R.layout.widget_lyric_ai_c2, R.layout.widget_lyric_ai_c3,
-            R.layout.widget_lyric_ai_c4, R.layout.widget_lyric_ai_c5, R.layout.widget_lyric_ai_c6, R.layout.widget_lyric_ai_c7,
-            R.layout.widget_lyric_ai_c8, R.layout.widget_lyric_ai_c9, R.layout.widget_lyric_ai_c10, R.layout.widget_lyric_ai_c11,
-            R.layout.widget_lyric_ai_c12, R.layout.widget_lyric_ai_c13, R.layout.widget_lyric_ai_c14, R.layout.widget_lyric_ai_c15,
-            R.layout.widget_lyric_ai_c16, R.layout.widget_lyric_ai_c17, R.layout.widget_lyric_ai_c18, R.layout.widget_lyric_ai_c19,
-            R.layout.widget_lyric_ai_c20, R.layout.widget_lyric_ai_c21, R.layout.widget_lyric_ai_c22, R.layout.widget_lyric_ai_c23,
-            R.layout.widget_lyric_ai_c24, R.layout.widget_lyric_ai_c25, R.layout.widget_lyric_ai_c26, R.layout.widget_lyric_ai_c27,
-            R.layout.widget_lyric_ai_c28, R.layout.widget_lyric_ai_c29, R.layout.widget_lyric_ai_c30, R.layout.widget_lyric_ai_c31,
-            R.layout.widget_lyric_ai_c32, R.layout.widget_lyric_ai_c33, R.layout.widget_lyric_ai_c34, R.layout.widget_lyric_ai_c35,
+            R.layout.widget_lyric_ai_c0, R.layout.widget_lyric_ai_c1, R.layout.widget_lyric_ai_c2, R.layout.widget_lyric_ai_c3, R.layout.widget_lyric_ai_c4, R.layout.widget_lyric_ai_c5, R.layout.widget_lyric_ai_c6, R.layout.widget_lyric_ai_c7, R.layout.widget_lyric_ai_c8, R.layout.widget_lyric_ai_c9, R.layout.widget_lyric_ai_c10, R.layout.widget_lyric_ai_c11, R.layout.widget_lyric_ai_c12, R.layout.widget_lyric_ai_c13, R.layout.widget_lyric_ai_c14, R.layout.widget_lyric_ai_c15, R.layout.widget_lyric_ai_c16, R.layout.widget_lyric_ai_c17, R.layout.widget_lyric_ai_c18, R.layout.widget_lyric_ai_c19, R.layout.widget_lyric_ai_c20, R.layout.widget_lyric_ai_c21, R.layout.widget_lyric_ai_c22, R.layout.widget_lyric_ai_c23, R.layout.widget_lyric_ai_c24, R.layout.widget_lyric_ai_c25, R.layout.widget_lyric_ai_c26, R.layout.widget_lyric_ai_c27, R.layout.widget_lyric_ai_c28, R.layout.widget_lyric_ai_c29, R.layout.widget_lyric_ai_c30, R.layout.widget_lyric_ai_c31, R.layout.widget_lyric_ai_c32, R.layout.widget_lyric_ai_c33, R.layout.widget_lyric_ai_c34, R.layout.widget_lyric_ai_c35, R.layout.widget_lyric_ai_c36, R.layout.widget_lyric_ai_c37, R.layout.widget_lyric_ai_c38, R.layout.widget_lyric_ai_c39, R.layout.widget_lyric_ai_c40, R.layout.widget_lyric_ai_c41, R.layout.widget_lyric_ai_c42, R.layout.widget_lyric_ai_c43, R.layout.widget_lyric_ai_c44, R.layout.widget_lyric_ai_c45, R.layout.widget_lyric_ai_c46, R.layout.widget_lyric_ai_c47, R.layout.widget_lyric_ai_c48, R.layout.widget_lyric_ai_c49, R.layout.widget_lyric_ai_c50, R.layout.widget_lyric_ai_c51, R.layout.widget_lyric_ai_c52, R.layout.widget_lyric_ai_c53, R.layout.widget_lyric_ai_c54, R.layout.widget_lyric_ai_c55, R.layout.widget_lyric_ai_c56, R.layout.widget_lyric_ai_c57, R.layout.widget_lyric_ai_c58, R.layout.widget_lyric_ai_c59, R.layout.widget_lyric_ai_c60, R.layout.widget_lyric_ai_c61, R.layout.widget_lyric_ai_c62, R.layout.widget_lyric_ai_c63, R.layout.widget_lyric_ai_c64, R.layout.widget_lyric_ai_c65, R.layout.widget_lyric_ai_c66, R.layout.widget_lyric_ai_c67, R.layout.widget_lyric_ai_c68, R.layout.widget_lyric_ai_c69, R.layout.widget_lyric_ai_c70, R.layout.widget_lyric_ai_c71, R.layout.widget_lyric_ai_c72, R.layout.widget_lyric_ai_c73, R.layout.widget_lyric_ai_c74, R.layout.widget_lyric_ai_c75, R.layout.widget_lyric_ai_c76, R.layout.widget_lyric_ai_c77, R.layout.widget_lyric_ai_c78, R.layout.widget_lyric_ai_c79, R.layout.widget_lyric_ai_c80, R.layout.widget_lyric_ai_c81, R.layout.widget_lyric_ai_c82, R.layout.widget_lyric_ai_c83, R.layout.widget_lyric_ai_c84, R.layout.widget_lyric_ai_c85, R.layout.widget_lyric_ai_c86, R.layout.widget_lyric_ai_c87, R.layout.widget_lyric_ai_c88, R.layout.widget_lyric_ai_c89, R.layout.widget_lyric_ai_c90, R.layout.widget_lyric_ai_c91, R.layout.widget_lyric_ai_c92, R.layout.widget_lyric_ai_c93, R.layout.widget_lyric_ai_c94, R.layout.widget_lyric_ai_c95, R.layout.widget_lyric_ai_c96, R.layout.widget_lyric_ai_c97, R.layout.widget_lyric_ai_c98, R.layout.widget_lyric_ai_c99, R.layout.widget_lyric_ai_c100, R.layout.widget_lyric_ai_c101, R.layout.widget_lyric_ai_c102, R.layout.widget_lyric_ai_c103, R.layout.widget_lyric_ai_c104, R.layout.widget_lyric_ai_c105, R.layout.widget_lyric_ai_c106, R.layout.widget_lyric_ai_c107, R.layout.widget_lyric_ai_c108, R.layout.widget_lyric_ai_c109, R.layout.widget_lyric_ai_c110, R.layout.widget_lyric_ai_c111, R.layout.widget_lyric_ai_c112, R.layout.widget_lyric_ai_c113, R.layout.widget_lyric_ai_c114, R.layout.widget_lyric_ai_c115, R.layout.widget_lyric_ai_c116, R.layout.widget_lyric_ai_c117, R.layout.widget_lyric_ai_c118, R.layout.widget_lyric_ai_c119, R.layout.widget_lyric_ai_c120, R.layout.widget_lyric_ai_c121, R.layout.widget_lyric_ai_c122, R.layout.widget_lyric_ai_c123, R.layout.widget_lyric_ai_c124, R.layout.widget_lyric_ai_c125, R.layout.widget_lyric_ai_c126, R.layout.widget_lyric_ai_c127
     };
 
     private static volatile int sizeW = 0, sizeH = 0;
@@ -110,6 +86,9 @@ public class LyricService extends Service {
     private int lastCap = -1;
 
     private boolean running = false;
+    /** 磁贴开启时的 root 保活：后台把本进程 oom_score_adj 调低，不占用通知栏。 */
+    private volatile boolean rootKeepAlive = false;
+    private volatile boolean keepAliveThreadStarted = false;
     private volatile boolean launcherVisible = true;
     private long lastVisibleCheck = 0;
     private String lastNotify = "";
@@ -169,11 +148,20 @@ public class LyricService extends Service {
         } catch (Throwable ignored) {}
         try { LyriconBridge.get(this).register(); } catch (Throwable ignored) {}
         running = true;
+        try {
+            if (getSharedPreferences("settings", MODE_PRIVATE).getBoolean("keep_alive", true)) {
+                startRootKeepAlive();
+            }
+        } catch (Throwable ignored) {}
         main.post(tick);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        // 快捷磁贴开启：root 下把进程调成前台优先级保活，不显示通知。
+        if (intent != null && intent.getBooleanExtra("keep_alive", false)) {
+            startRootKeepAlive();
+        }
         if (intent != null && "com.dsh.lyriccard.TOGGLE".equals(intent.getAction())) {
             boolean en = !enabled();
             getSharedPreferences("settings", MODE_PRIVATE).edit().putBoolean("enabled", en).apply();
@@ -188,9 +176,34 @@ public class LyricService extends Service {
         return START_STICKY;
     }
 
+    /** 用 root 周期性地把本进程 oom_score_adj 压到 -500（前台服务级别），避免被 FastClear 清掉。 */
+    private void startRootKeepAlive() {
+        rootKeepAlive = true;
+        if (keepAliveThreadStarted) return;
+        keepAliveThreadStarted = true;
+        Thread t = new Thread(new Runnable() {
+            @Override public void run() {
+                while (running && rootKeepAlive) {
+                    try {
+                        int pid = android.os.Process.myPid();
+                        Process p = Runtime.getRuntime().exec(new String[]{"su", "-c",
+                                "echo -500 > /proc/" + pid + "/oom_score_adj"});
+                        p.waitFor();
+                    } catch (Throwable ignored) {}
+                    try { Thread.sleep(60000); } catch (InterruptedException e) { return; }
+                }
+                keepAliveThreadStarted = false;
+            }
+        }, "root-keepalive");
+        t.setDaemon(true);
+        t.start();
+    }
+
     @Override
     public void onDestroy() {
         running = false;
+        try { if (isForeground) stopForeground(true); } catch (Throwable ignored) {}
+        isForeground = false;
         try { LyriconBridge.get(this).unregister(); } catch (Throwable ignored) {}
         try { unregisterReceiver(visibilityReceiver); } catch (Throwable ignored) {}
         main.removeCallbacksAndMessages(null);
@@ -244,7 +257,7 @@ public class LyricService extends Service {
     private void ensureMediaListener() {
         if (msm != null) return;
         if (!hasNotificationAccess()) {
-            notifyStatus("需要通知使用权", "打开 LyricGlass 完成授权");
+            notifyStatus("需要通知使用权", "打开 LyricCard 完成授权");
             return;
         }
         msm = (MediaSessionManager) getSystemService(MEDIA_SESSION_SERVICE);
@@ -291,8 +304,14 @@ public class LyricService extends Service {
             boolean pauseUsage = ps.getBoolean("pause_usage", false);
             boolean visible = true;
             if (pauseRoot) {
-                // LSP 事件驱动；还没收到过事件时按可见处理，避免误暂停。
-                visible = VisibilityService.lastEventAt == 0 || VisibilityService.lspVisible;
+                // LSP 事件在 15 秒内有效就用它（即时）；否则用后台 root 检测结果，
+                // 避免 LSP 模块更新/桌面未重启后事件失联导致永久暂停。
+                long nowV = SystemClock.elapsedRealtime();
+                if (VisibilityService.lastEventAt > 0 && nowV - VisibilityService.lastEventAt < 15000) {
+                    visible = VisibilityService.lspVisible;
+                } else {
+                    visible = launcherFg;
+                }
             } else if (pauseUsage) {
                 visible = launcherFg;
             }
@@ -338,8 +357,12 @@ public class LyricService extends Service {
                         boolean useRoot = ps.getBoolean("pause_root", false);
                         boolean useUsage = ps.getBoolean("pause_usage", false);
                         if (useRoot) {
-                            // 优先用 LSP 推来的可见性；没收到过事件时才用 su 兜底。
-                            if (VisibilityService.lastEventAt > 0) {
+                            // LSP 事件新鲜（15 秒内）时优先；失联时用 su / 使用记录兜底，
+                            // 否则模块更新后桌面没重启会一直沿用旧的“不可见”。
+                            long nowV2 = SystemClock.elapsedRealtime();
+                            boolean lspFresh = VisibilityService.lastEventAt > 0
+                                    && nowV2 - VisibilityService.lastEventAt < 15000;
+                            if (lspFresh) {
                                 launcherFg = VisibilityService.lspVisible;
                             } else {
                                 long nowMs = SystemClock.elapsedRealtime();
@@ -424,7 +447,9 @@ public class LyricService extends Service {
     private int systemAccent() {
         if (systemAccentColor == 0) {
             try {
-                systemAccentColor = getColor(android.R.color.system_accent1_200);
+                // 200 是 Monet 的浅色调，饱和度太低会被当成灰白；用 500 更有颜色。
+                systemAccentColor = getColor(android.R.color.system_accent1_500);
+                if (systemAccentColor == 0) systemAccentColor = getColor(android.R.color.system_accent1_200);
             } catch (Throwable ignored) {}
             if (systemAccentColor == 0) systemAccentColor = 0xFFFFD68A;
         }
@@ -549,10 +574,9 @@ public class LyricService extends Service {
         title = t;
         artist = a;
 
-        if (t.isEmpty()) {
+        int colorMode = getSharedPreferences("settings", MODE_PRIVATE).getInt("color_mode", 1);
+        if (t.isEmpty() || colorMode == 0) {
             glowColor = systemAccent();
-        } else if (monetEnabled()) {
-            glowColor = monetColor();
         } else if (art != null) {
             int gen = art.getGenerationId();
             if (gen != lastArtGen) {
@@ -780,7 +804,9 @@ public class LyricService extends Service {
 
         float[] hsv = new float[3];
         android.graphics.Color.colorToHSV(glowColor | 0xFF000000, hsv);
-        int hueIndex = Math.max(0, Math.min(35, (int) (hsv[0] / 10f)));
+        // 封面色接近灰白（低饱和）时用中性发光布局，避免被映射到红色等色相。
+        boolean neutralColor = hsv[1] < 0.08f;
+        int hueIndex = neutralColor ? -1 : Math.max(0, Math.min(127, (int) (hsv[0] * 128f / 360f)));
         int padKey = (padPx("pad_left") * 31 + padPx("pad_top")) * 31 + padPx("pad_right");
         padKey = padKey * 31 + padPx("pad_bottom");
         boolean layoutChanged = hueIndex != lastHueIndex || padKey != lastPadKey;
@@ -794,7 +820,14 @@ public class LyricService extends Service {
 
         int mode = getSharedPreferences("settings", MODE_PRIVATE).getInt("italic_mode", 0);
         int[] layouts = mode == 1 ? WIDGET_IT : mode == 2 ? WIDGET_TI : mode == 3 ? WIDGET_AI : WIDGET_LAYOUTS;
-        RemoteViews rv = new RemoteViews(getPackageName(), layouts[hueIndex]);
+        int layoutId;
+        if (neutralColor) {
+            layoutId = mode == 1 ? R.layout.widget_lyric_it_n : mode == 2 ? R.layout.widget_lyric_ti_n
+                    : mode == 3 ? R.layout.widget_lyric_ai_n : R.layout.widget_lyric_n;
+        } else {
+            layoutId = layouts[hueIndex];
+        }
+        RemoteViews rv = new RemoteViews(getPackageName(), layoutId);
 
         rv.setTextViewText(R.id.title, title.isEmpty() ? emptyTitle : title);
         rv.setTextViewText(R.id.artist, artist);
@@ -811,6 +844,10 @@ public class LyricService extends Service {
         int rows = (int) ((h - head - 10 - transH) / lineH);
         rows = Math.max(1, Math.min(24, rows));
         boolean tight = getSharedPreferences("settings", MODE_PRIVATE).getBoolean("compact", false);
+        // 有用整首翻译时走原布局；无翻译时底部没有翻译行，多给两行容量，
+        // 再用空行把当前行推到卡片垂直中心。紧凑模式保持原有单行格局。
+        boolean songHasTrans = lyric != null && lyric.trans != null && !lyric.trans.isEmpty();
+        if (!songHasTrans && !tight) rows = Math.min(24, rows + 2);
 
         int cap = Math.max(1, rows + 1);
         int n = (lyric == null) ? 0 : lyric.lines.size();
@@ -831,10 +868,14 @@ public class LyricService extends Service {
             for (int i = idx - 1; i >= 0 && (idx - i) <= 10; i--) {
                 upAvail += lineCount(mp2, lyric.lines.get(i).text, availW);
             }
+            int downAvail = 0;
+            for (int i = idx + 1; i < n && (i - idx) <= 10; i++) {
+                downAvail += lineCount(mp2, lyric.lines.get(i).text, availW);
+            }
             int upBudget = 0, downBudget = 0;
             if (!tight) {
                 upBudget = Math.min(rem / 2, upAvail);
-                downBudget = rem - upBudget;
+                downBudget = Math.min(rem - upBudget, downAvail);
             }
             android.util.Log.i("LyricCardSize", "h=" + h + " rows=" + rows + " cap=" + cap
                     + " up=" + upBudget + " down=" + downBudget + " cur=" + curNeed);
@@ -844,6 +885,7 @@ public class LyricService extends Service {
             rv.setInt(R.id.glow_b, "setMaxLines", curShow);
 
             int used = 0;
+            int upCount = 0, upLines = 0, downLines = 0;
             for (int i = idx - 1; i >= 0 && used < 16 && upBudget > 0; i--, used++) {
                 String t = lyric.lines.get(i).text;
                 int show = Math.min(lineCount(mp2, t, availW), upBudget);
@@ -852,7 +894,9 @@ public class LyricService extends Service {
                 rv.setInt(viewId, "setMaxLines", show);
                 rv.setViewVisibility(viewId, View.VISIBLE);
                 upBudget -= show;
+                upLines += show;
             }
+            upCount = used;
             used = 0;
             for (int i = idx + 1; i < n && used < 16 && downBudget > 0; i++, used++) {
                 String t = lyric.lines.get(i).text;
@@ -862,10 +906,43 @@ public class LyricService extends Service {
                 rv.setInt(viewId, "setMaxLines", show);
                 rv.setViewVisibility(viewId, View.VISIBLE);
                 downBudget -= show;
+                downLines += show;
+            }
+            int downCount = used;
+            // 无翻译且上方有歌词时，用空行补平上下，让当前行落在卡片垂直中心；
+            // 前奏/歌曲开头（上方没有歌词）不填充，保持贴顶。
+            if (!songHasTrans && !tight && upAvail > 0) {
+                float lineH11 = textHeight(11f);
+                float ratio = lineH / lineH11;
+                // 上下可用空间换算成 11sp 行，保证填充不会把内容推出卡片
+                float totalUnits = Math.max(0f, rows - Math.min(curNeed, 8)) * ratio;
+                float upUnits = upLines * ratio;
+                float downUnits = downLines * ratio;
+                float spare = totalUnits - upUnits - downUnits;
+                float diff = downUnits - upUnits;
+                int fillUp = spare > 0 ? Math.round(Math.max(0f, (spare + diff) / 2f)) : 0;
+                int fillDown = spare > 0 ? Math.round(Math.max(0f, (spare - diff) / 2f)) : 0;
+                fillUp = Math.min(fillUp, 16 - upCount);
+                fillDown = Math.min(fillDown, 16 - downCount);
+                for (int f = 0; f < fillUp; f++) {
+                    int viewId = rowIds[15 - upCount - f];
+                    rv.setTextViewText(viewId, " ");
+                    rv.setInt(viewId, "setMaxLines", 1);
+                    rv.setViewVisibility(viewId, View.VISIBLE);
+                }
+                for (int f = 0; f < fillDown; f++) {
+                    int viewId = rowIds[17 + downCount + f];
+                    rv.setTextViewText(viewId, " ");
+                    rv.setInt(viewId, "setMaxLines", 1);
+                    rv.setViewVisibility(viewId, View.VISIBLE);
+                }
             }
         }
+        boolean glowOn = getSharedPreferences("settings", MODE_PRIVATE).getBoolean("glow", true);
         rv.setTextViewText(R.id.line_trans, trans);
-        rv.setViewVisibility(R.id.line_trans, trans.isEmpty() ? View.GONE : View.VISIBLE);
+        rv.setTextViewText(R.id.line_trans_plain, trans);
+        rv.setViewVisibility(R.id.line_trans, (!trans.isEmpty() && glowOn) ? View.VISIBLE : View.GONE);
+        rv.setViewVisibility(R.id.line_trans_plain, (!trans.isEmpty() && !glowOn) ? View.VISIBLE : View.GONE);
 
         SharedPreferences sp = getSharedPreferences("settings", MODE_PRIVATE);
         int align = sp.getInt("align", 1);
@@ -879,6 +956,7 @@ public class LyricService extends Service {
         rv.setInt(R.id.content, "setGravity", gravity);
         for (int rid : rowIds) rv.setInt(rid, "setGravity", gravity);
         rv.setInt(R.id.line_trans, "setGravity", gravity);
+        rv.setInt(R.id.line_trans_plain, "setGravity", gravity);
         rv.setInt(R.id.text_a, "setGravity", gravity);
         rv.setInt(R.id.text_b, "setGravity", gravity);
         rv.setInt(R.id.glow_a, "setGravity", gravity);
@@ -895,6 +973,14 @@ public class LyricService extends Service {
         rv.setViewVisibility(R.id.glow_b, glow ? View.VISIBLE : View.GONE);
         rv.setViewPadding(R.id.content, padPx("pad_left"), padPx("pad_top"),
                 padPx("pad_right"), padPx("pad_bottom"));
+
+        // 歌名/歌手名的透明度与阴影度（自定义 ShadowTextView 暴露 setShadowLevel）
+        try {
+            int ta = Math.max(0, Math.min(100, sp.getInt("title_alpha", 100)));
+            int aa = Math.max(0, Math.min(100, sp.getInt("artist_alpha", 100)));
+            rv.setFloat(R.id.title, "setAlpha", ta / 100f);
+            rv.setFloat(R.id.artist, "setAlpha", aa / 100f);
+        } catch (Throwable ignored) {}
 
 
         rv.setTextViewTextSize(R.id.title, TypedValue.COMPLEX_UNIT_SP, 13 * scale);
@@ -932,6 +1018,7 @@ public class LyricService extends Service {
         rv.setTextViewTextSize(R.id.line_next3, TypedValue.COMPLEX_UNIT_SP, 11 * scale);
         rv.setTextViewTextSize(R.id.line_next4, TypedValue.COMPLEX_UNIT_SP, 11 * scale);
         rv.setTextViewTextSize(R.id.line_trans, TypedValue.COMPLEX_UNIT_SP, 11 * scale);
+        rv.setTextViewTextSize(R.id.line_trans_plain, TypedValue.COMPLEX_UNIT_SP, 11 * scale);
         rv.setTextViewTextSize(R.id.text_a, TypedValue.COMPLEX_UNIT_SP, 17 * scale);
         rv.setTextViewTextSize(R.id.text_b, TypedValue.COMPLEX_UNIT_SP, 17 * scale);
         rv.setTextViewTextSize(R.id.glow_a, TypedValue.COMPLEX_UNIT_SP, 17 * scale);

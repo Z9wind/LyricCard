@@ -32,7 +32,7 @@ final class LyricCardView extends View {
 
     void setItalic(boolean cur, boolean other, boolean title, boolean artist) {
         itCur = cur; itOther = other; itTitle = title; itArtist = artist;
-        android.util.Log.i("LyricGlassX.card", "italic cur=" + cur + " other=" + other
+        android.util.Log.i("LyricCardX.card", "italic cur=" + cur + " other=" + other
                 + " title=" + title + " artist=" + artist);
         invalidate();
     }
@@ -142,7 +142,7 @@ final class LyricCardView extends View {
         main.setTextSize(titleSize);
         main.setColor(Color.WHITE);
         main.setShadowLayer(9f, 0f, 0f, (0xC0 << 24) | (glowColor & 0xFFFFFF));
-        String t = title.isEmpty() ? "LyricGlass" : title;
+        String t = title.isEmpty() ? "LyricCard" : title;
         float total = drawWrappedLeft(c, main, t, left, top, maxW);
 
         dim.setTypeface(NORMAL);
@@ -150,7 +150,7 @@ final class LyricCardView extends View {
         dim.setTextSize(titleSize * 0.78f);
         dim.setColor(0xCCFFFFFF);
         dim.setShadowLayer(7f, 0f, 0f, (0xA0 << 24) | (glowColor & 0xFFFFFF));
-        String a = artist.isEmpty() ? "LyricGlass" : artist;
+        String a = artist.isEmpty() ? "LyricCard" : artist;
         total += drawWrappedLeft(c, dim, a, left, top + total, maxW);
         return top + total;
     }
