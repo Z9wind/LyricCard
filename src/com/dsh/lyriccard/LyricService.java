@@ -167,6 +167,8 @@ public class LyricService extends Service {
             notifyStatus(en ? "LyricCard" : "已暂停", en ? "歌词已开启" : "歌词已暂停");
         }
         ensureMediaListener();
+        running = true;
+        forceRefresh = true;
         main.removeCallbacks(tick);
         main.post(tick);
         return START_STICKY;
@@ -280,10 +282,11 @@ public class LyricService extends Service {
             } else if (pauseUsage) {
                 visible = launcherFg;
             }
-            if (!visible) {
+            if (!visible && !forceRefresh) {
                 main.postDelayed(this, 250);
                 return;
             }
+            forceRefresh = false;
             long now = SystemClock.elapsedRealtime();
             long gap = lastTickAt == 0 ? 0 : now - lastTickAt;
             lastTickAt = now;
@@ -419,6 +422,7 @@ public class LyricService extends Service {
     private long lastFetchTry = 0;
 
     private volatile boolean reading = false;
+    private volatile boolean forceRefresh = false;
     private volatile boolean launcherFg = true;
     private volatile int rootState = -1; // -1 未检测, 0 无, 1 有
     private long lastRootCheck = 0;
