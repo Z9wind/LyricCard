@@ -514,7 +514,7 @@ public class LyricService extends Service {
         Lyric bridgeLyric = bridge.getLyric();
         // 播放器已经停止/退出（没有活动会话）时，不再使用桥里残留的旧歌词，
         // 否则会一直停在上一次的最后一句，而不是显示默认文本。
-        if (active == null) {
+        if (active == null || st == PlaybackState.STATE_NONE || st == PlaybackState.STATE_STOPPED) {
             bridgeLyric = null;
             t = "";
             a = "";
