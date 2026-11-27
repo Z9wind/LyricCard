@@ -123,6 +123,15 @@ public class LyricService extends Service {
         }
     }
 
+    private final android.content.BroadcastReceiver refreshReceiver = new android.content.BroadcastReceiver() {
+        @Override public void onReceive(Context c, Intent i) {
+            lastPushKey = "";
+            forceRefresh = true;
+            main.removeCallbacks(tick);
+            main.post(tick);
+        }
+    };
+
     private final android.content.BroadcastReceiver visibilityReceiver = new android.content.BroadcastReceiver() {
         @Override public void onReceive(Context c, Intent i) {
             launcherVisible = i.getBooleanExtra("visible", true);
@@ -143,7 +152,7 @@ public class LyricService extends Service {
         } catch (Throwable ignored) {}
         createChannel();
         registerSizeReceiver();
-        // 任何设置变化都要让小组件重建（斜体、字体、对齐、配色等）。
+        // 设置变化（斜体、字号、对齐、配色等）需要让小组件重建。
         try {
             getSharedPreferences("settings", MODE_PRIVATE)
                     .registerOnSharedPreferenceChangeListener(new android.content.SharedPreferences.OnSharedPreferenceChangeListener() {
@@ -153,6 +162,11 @@ public class LyricService extends Service {
                     });
         } catch (Throwable ignored) {}
         startLauncherWatcher();
+        try {
+            android.content.IntentFilter rf = new android.content.IntentFilter("com.dsh.lyriccard.REFRESH");
+            if (Build.VERSION.SDK_INT >= 33) registerReceiver(refreshReceiver, rf, Context.RECEIVER_EXPORTED);
+            else registerReceiver(refreshReceiver, rf);
+        } catch (Throwable ignored) {}
         try { LyriconBridge.get(this).register(); } catch (Throwable ignored) {}
         running = true;
         main.post(tick);

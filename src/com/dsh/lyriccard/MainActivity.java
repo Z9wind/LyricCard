@@ -398,7 +398,12 @@ public class MainActivity extends Activity {
             @Override public void onTextChanged(CharSequence s, int a, int b, int c) {}
             @Override public void afterTextChanged(android.text.Editable s) {
                 sp.edit().putString(key, s.toString()).apply();
-                try { LyricService.start(MainActivity.this); } catch (Throwable ignored) {}
+                try {
+                    android.content.Intent ri = new android.content.Intent("com.dsh.lyriccard.REFRESH");
+                    ri.setPackage("com.dsh.lyriccard");
+                    sendBroadcast(ri);
+                    LyricService.start(MainActivity.this);
+                } catch (Throwable ignored) {}
             }
         });
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
