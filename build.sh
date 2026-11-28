@@ -55,14 +55,17 @@ cp "$OUT/base.apk" "$OUT/unsigned.apk"
 (cd "$ROOT/xposed-meta" && zip -q -r "$OUT/unsigned.apk" META-INF/xposed)
 
 echo "[7/8] sign"
-if [ ! -f "$OUT/debug.keystore" ]; then
-  keytool -genkeypair -keystore "$OUT/debug.keystore" -alias lg \
+# 固定签名：keystore 放在 build/ 之外，清空 build 不会删掉它，保证所有版本签名一致。
+KS=$ROOT/keystore/debug.keystore
+mkdir -p "$ROOT/keystore"
+if [ ! -f "$KS" ]; then
+  keytool -genkeypair -keystore "$KS" -alias lg \
     -keyalg RSA -keysize 2048 -validity 10000 \
     -storepass android -keypass android -dname "CN=LyricCard,OU=DSH,O=DSH,C=CN" >/dev/null 2>&1
 fi
 rm -f "$ROOT/LyricCard.apk"
 java -jar "$BT/lib/apksigner.jar" sign \
-  --ks "$OUT/debug.keystore" --ks-pass pass:android --key-pass pass:android \
+  --ks "$KS" --ks-pass pass:android --key-pass pass:android \
   --out "$ROOT/LyricCard.apk" "$OUT/unsigned.apk"
 
 echo "[8/8] verify"
